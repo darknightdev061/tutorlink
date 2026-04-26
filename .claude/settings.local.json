@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(node scripts/migrate.js)",
+      "Bash(node scripts/check.js)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "Bash(node ../scripts/smoketest.js)",
+      "Bash(node -e \"process.chdir\\('$\\(pwd\\)'\\); require\\('child_process'\\).execSync\\('node ' + JSON.stringify\\(require\\('path'\\).resolve\\('../scripts/smoketest.js'\\)\\), {stdio:'inherit'}\\)\")",
+      "Bash(cp \"D:/Tutor 2/scripts/smoketest.js\" \"D:/Tutor 2/backend/_smoketest.js\")",
+      "Bash(node _smoketest.js)",
+      "Bash(rm -f _smoketest.js)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git -c user.email=ritawik@grozep.com -c user.name=Ritawik commit -m 'Initial commit: TutorLink — full-stack tutoring app *)"
+    ]
+  }
+}

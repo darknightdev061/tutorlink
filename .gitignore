@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.local
+.vercel
+.DS_Store
+*.log
+
+# Local secrets — never commit
+Conn.txt
+Supabase_api.txt
+Readme.txt

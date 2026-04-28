@@ -23,8 +23,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 glass border-b border-slate-200/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg text-brand-700">
-          <GraduationCap className="w-7 h-7" />
+        <Link to="/" className="flex items-center gap-2 font-bold text-xl h-display text-brand-700">
+          <span className="w-9 h-9 rounded-xl gradient-rainbow flex items-center justify-center text-white shadow-playful">
+            <GraduationCap className="w-5 h-5" />
+          </span>
           TutorLink
         </Link>
         <nav className="hidden lg:flex items-center gap-1 ml-4">

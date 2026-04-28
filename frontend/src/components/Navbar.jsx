@@ -14,7 +14,6 @@ export default function Navbar() {
 
   const links = [
     { to: '/', label: 'Home' },
-    { to: '/find-tutors', label: 'Find Tutors' },
     { to: '/subjects', label: 'Subjects' },
     { to: '/how-it-works', label: 'How it Works' },
     { to: '/become-tutor', label: 'Become a Tutor' }
@@ -40,7 +39,7 @@ export default function Navbar() {
         </nav>
         <div className="flex-1" />
         <div className="hidden md:flex items-center gap-2">
-          {session ? (
+          {session && (
             <>
               <Link to={dashHref} className="btn-outline">
                 <LayoutDashboard className="w-4 h-4" /> Dashboard
@@ -48,11 +47,6 @@ export default function Navbar() {
               <button onClick={async () => { await signOut(); nav('/'); }} className="btn-ghost">
                 <LogOut className="w-4 h-4" /> Logout
               </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn-ghost">Login</Link>
-              <Link to="/signup" className="btn-primary">Get Started</Link>
             </>
           )}
         </div>
@@ -68,19 +62,12 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          <div className="border-t pt-2 mt-2 flex gap-2">
-            {session ? (
-              <>
-                <Link onClick={() => setOpen(false)} to={dashHref} className="btn-outline flex-1">Dashboard</Link>
-                <button onClick={async () => { setOpen(false); await signOut(); nav('/'); }} className="btn-ghost">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link onClick={() => setOpen(false)} to="/login" className="btn-ghost flex-1">Login</Link>
-                <Link onClick={() => setOpen(false)} to="/signup" className="btn-primary flex-1">Get Started</Link>
-              </>
-            )}
-          </div>
+          {session && (
+            <div className="border-t pt-2 mt-2 flex gap-2">
+              <Link onClick={() => setOpen(false)} to={dashHref} className="btn-outline flex-1">Dashboard</Link>
+              <button onClick={async () => { setOpen(false); await signOut(); nav('/'); }} className="btn-ghost">Logout</button>
+            </div>
+          )}
         </div>
       )}
     </header>

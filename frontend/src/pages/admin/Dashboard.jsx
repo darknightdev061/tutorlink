@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import {
   Users, GraduationCap, Clock, CheckCircle2, Inbox, Activity, Search,
   Check, X, ChevronDown, ChevronUp, Trash2, Power, UserPlus, BarChart3,
-  MessageSquare, IndianRupee, Mail, Phone, MapPin, RefreshCw
+  MessageSquare, IndianRupee, Mail, Phone, MapPin, RefreshCw,
+  FileText, Save, Plus, Trash, Settings
 } from 'lucide-react';
 
 const TABS = [
@@ -13,7 +14,8 @@ const TABS = [
   { id: 'students',  label: 'Students',          icon: Users },
   { id: 'enquiries', label: 'Enquiries',         icon: MessageSquare },
   { id: 'leads',     label: 'Leads',             icon: Inbox },
-  { id: 'register',  label: 'Register Student',  icon: UserPlus }
+  { id: 'register',  label: 'Register Student',  icon: UserPlus },
+  { id: 'content',   label: 'Site Content',      icon: FileText }
 ];
 
 export default function AdminDashboard() {
@@ -55,6 +57,7 @@ export default function AdminDashboard() {
       {tab === 'enquiries' && <Enquiries />}
       {tab === 'leads'     && <Leads />}
       {tab === 'register'  && <RegisterStudent onCreated={() => { refreshStats(); setTab('students'); }} />}
+      {tab === 'content'   && <SiteContent />}
     </div>
   );
 }
@@ -451,6 +454,196 @@ function RegisterStudent({ onCreated }) {
         </div>
         <button disabled={busy} className="btn-primary"><UserPlus className="w-4 h-4" /> {busy ? 'Registering…' : 'Register student'}</button>
       </form>
+    </div>
+  );
+}
+
+/* ------------------------- SITE CONTENT ------------------------- */
+const DEFAULT_CONTENT = {
+  hero: {
+    badge: 'Made in India 🇮🇳 • For every Indian child',
+    title_part1: 'Learning that feels',
+    title_highlight: 'play time',
+    title_part2: 'not homework',
+    subtitle: "India's friendliest 1-on-1 tutoring platform — connect with a verified, hand-picked tutor for your child, from Class 1 to Class 12. Boards, JEE, NEET, Olympiads, coding, music & more — all from ₹199 / hour.",
+    cta_primary: 'Start free — book a demo',
+    cta_secondary: 'Browse 3,400+ tutors'
+  },
+  stats: [
+    { value: '12,000+', label: 'Happy students' },
+    { value: '3,400+',  label: 'Verified tutors' },
+    { value: '50+',     label: 'Subjects offered' },
+    { value: '4.9 ★',   label: 'Average rating' },
+    { value: '98%',     label: 'Parents recommend' },
+    { value: '120+',    label: 'Cities covered' }
+  ],
+  plans: [
+    { name: 'Starter',  price: 1999, per: 'month', badge: '',             desc: 'Perfect to try out — for one subject, 8 sessions a month.',
+      features: ['8 sessions / month (45 mins each)','1 subject of your choice','Free demo session','WhatsApp doubt support','Cancel anytime'] },
+    { name: 'Smart',    price: 3499, per: 'month', badge: 'Most Popular', desc: 'Most-loved plan — covers two subjects with weekly tests.',
+      features: ['16 sessions / month','Up to 2 subjects','Weekly mock tests + analysis','Monthly parent report card','Priority tutor matching','Class recordings (30-day access)'] },
+    { name: 'Champion', price: 5999, per: 'month', badge: 'Best Value',   desc: 'For boards & competitive prep — unlimited subjects + mentor.',
+      features: ['Unlimited sessions (Mon–Sat)','All subjects + Olympiad prep','Daily DPPs + AI doubt-bot','Dedicated academic mentor','JEE / NEET / CUET test series','1-on-1 career counselling'] }
+  ],
+  hourly_starts_at: 199,
+  contact: {
+    email: 'hello@tutorlink.in',
+    phone: '+91 90000 12345',
+    whatsapp: '+919000012345'
+  }
+};
+
+function SiteContent() {
+  const [content, setContent] = useState(DEFAULT_CONTENT);
+  const [busy, setBusy] = useState(false);
+  const [missingTable, setMissingTable] = useState(false);
+  const [savedAt, setSavedAt] = useState(null);
+
+  useEffect(() => {
+    api.get('/api/admin/site/content/landing')
+      .then(r => {
+        if (r.missing_table) setMissingTable(true);
+        if (r.data && Object.keys(r.data).length) setContent({ ...DEFAULT_CONTENT, ...r.data });
+        if (r.updated_at) setSavedAt(r.updated_at);
+      })
+      .catch(e => toast.error(e.message));
+  }, []);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      const r = await api.patch('/api/admin/site/content/landing', { data: content });
+      setSavedAt(r.updated_at);
+      toast.success('Saved — live on the site in seconds');
+    } catch (e) {
+      if (/site_content table missing/i.test(e.message)) setMissingTable(true);
+      toast.error(e.message);
+    } finally { setBusy(false); }
+  };
+
+  const setHero  = (k, v) => setContent({ ...content, hero: { ...content.hero, [k]: v } });
+  const setStat  = (i, k, v) => setContent({ ...content, stats: content.stats.map((s, idx) => idx === i ? { ...s, [k]: v } : s) });
+  const setPlan  = (i, k, v) => setContent({ ...content, plans: content.plans.map((p, idx) => idx === i ? { ...p, [k]: v } : p) });
+  const setPlanFeat = (pi, fi, v) => setContent({ ...content, plans: content.plans.map((p, idx) =>
+    idx === pi ? { ...p, features: p.features.map((f, j) => j === fi ? v : f) } : p) });
+  const addPlanFeat = (pi) => setContent({ ...content, plans: content.plans.map((p, idx) =>
+    idx === pi ? { ...p, features: [...p.features, 'New feature'] } : p) });
+  const delPlanFeat = (pi, fi) => setContent({ ...content, plans: content.plans.map((p, idx) =>
+    idx === pi ? { ...p, features: p.features.filter((_, j) => j !== fi) } : p) });
+  const setContact = (k, v) => setContent({ ...content, contact: { ...content.contact, [k]: v } });
+
+  return (
+    <div className="space-y-8 max-w-4xl">
+      {missingTable && (
+        <div className="card-fun p-5 bg-coral-50 border-coral-200">
+          <div className="font-bold text-coral-700 mb-2 flex items-center gap-2"><Settings className="w-4 h-4" /> One-time setup needed</div>
+          <p className="text-sm text-slate-700">The <code className="bg-white px-1.5 rounded">site_content</code> table doesn't exist yet. Open the Supabase SQL editor and run the contents of <code className="bg-white px-1.5 rounded">supabase/site_content.sql</code> from the repo. Saving below will work as soon as the table is created.</p>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="h-display text-2xl font-bold">Edit landing-page content</h2>
+          <p className="text-sm text-slate-500">{savedAt ? `Last saved ${new Date(savedAt).toLocaleString('en-IN')}` : 'No saves yet — current values come from defaults.'}</p>
+        </div>
+        <button onClick={save} disabled={busy} className="btn-primary"><Save className="w-4 h-4" /> {busy ? 'Saving…' : 'Save changes'}</button>
+      </div>
+
+      {/* HERO */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-4">Hero section</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="label">Badge text</label>
+            <input className="input" value={content.hero.badge} onChange={e => setHero('badge', e.target.value)} />
+          </div>
+          <div><label className="label">Title — first line</label>
+            <input className="input" value={content.hero.title_part1} onChange={e => setHero('title_part1', e.target.value)} /></div>
+          <div><label className="label">Title — highlighted word</label>
+            <input className="input" value={content.hero.title_highlight} onChange={e => setHero('title_highlight', e.target.value)} /></div>
+          <div className="sm:col-span-2"><label className="label">Title — last line</label>
+            <input className="input" value={content.hero.title_part2} onChange={e => setHero('title_part2', e.target.value)} /></div>
+          <div className="sm:col-span-2"><label className="label">Subtitle</label>
+            <textarea className="input min-h-[110px]" value={content.hero.subtitle} onChange={e => setHero('subtitle', e.target.value)} /></div>
+          <div><label className="label">Primary CTA text</label>
+            <input className="input" value={content.hero.cta_primary} onChange={e => setHero('cta_primary', e.target.value)} /></div>
+          <div><label className="label">Secondary CTA text</label>
+            <input className="input" value={content.hero.cta_secondary} onChange={e => setHero('cta_secondary', e.target.value)} /></div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-4">Stats strip (6 numbers)</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {content.stats.map((s, i) => (
+            <div key={i} className="grid grid-cols-2 gap-2">
+              <input className="input" placeholder="Value" value={s.value} onChange={e => setStat(i, 'value', e.target.value)} />
+              <input className="input" placeholder="Label" value={s.label} onChange={e => setStat(i, 'label', e.target.value)} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* PRICING PLANS */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-2">Pricing plans (INR)</h3>
+        <p className="text-sm text-slate-500 mb-5">All prices in ₹ (INR). Leave badge blank if you don't want a sticker on the card.</p>
+        <div className="space-y-5">
+          {content.plans.map((p, pi) => (
+            <div key={pi} className="border-2 border-slate-100 rounded-2xl p-5 bg-slate-50/40">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div><label className="label">Name</label>
+                  <input className="input" value={p.name} onChange={e => setPlan(pi, 'name', e.target.value)} /></div>
+                <div><label className="label">Price (₹)</label>
+                  <input className="input" type="number" value={p.price} onChange={e => setPlan(pi, 'price', Number(e.target.value) || 0)} /></div>
+                <div><label className="label">Per</label>
+                  <input className="input" value={p.per} onChange={e => setPlan(pi, 'per', e.target.value)} placeholder="month / hour" /></div>
+                <div><label className="label">Badge (optional)</label>
+                  <input className="input" value={p.badge || ''} onChange={e => setPlan(pi, 'badge', e.target.value)} placeholder="e.g. Most Popular" /></div>
+                <div className="sm:col-span-2 lg:col-span-4"><label className="label">Description</label>
+                  <input className="input" value={p.desc} onChange={e => setPlan(pi, 'desc', e.target.value)} /></div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="label !mb-0">Features</label>
+                  <button type="button" onClick={() => addPlanFeat(pi)} className="btn-ghost py-1 px-2 text-xs"><Plus className="w-3.5 h-3.5" /> Add</button>
+                </div>
+                <div className="space-y-2">
+                  {p.features.map((f, fi) => (
+                    <div key={fi} className="flex gap-2">
+                      <input className="input flex-1" value={f} onChange={e => setPlanFeat(pi, fi, e.target.value)} />
+                      <button type="button" onClick={() => delPlanFeat(pi, fi)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4">
+          <label className="label">Pay-per-class hourly rate (₹)</label>
+          <input className="input max-w-xs" type="number" value={content.hourly_starts_at}
+            onChange={e => setContent({ ...content, hourly_starts_at: Number(e.target.value) || 0 })} />
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-4">Contact details</h3>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div><label className="label">Email</label>
+            <input className="input" value={content.contact.email} onChange={e => setContact('email', e.target.value)} /></div>
+          <div><label className="label">Phone (display)</label>
+            <input className="input" value={content.contact.phone} onChange={e => setContact('phone', e.target.value)} /></div>
+          <div><label className="label">WhatsApp number (no spaces)</label>
+            <input className="input" value={content.contact.whatsapp} onChange={e => setContact('whatsapp', e.target.value)} placeholder="+919000012345" /></div>
+        </div>
+      </section>
+
+      <div className="sticky bottom-4 flex justify-end">
+        <button onClick={save} disabled={busy} className="btn-primary shadow-playful"><Save className="w-4 h-4" /> {busy ? 'Saving…' : 'Save all changes'}</button>
+      </div>
     </div>
   );
 }

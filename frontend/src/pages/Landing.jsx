@@ -319,6 +319,19 @@ export default function Landing() {
     return () => clearInterval(id);
   }, []);
 
+  // Admin-editable site content (falls back to hardcoded defaults if API/table missing)
+  const [cms, setCms] = useState(null);
+  useEffect(() => {
+    fetch('/api/site/content/landing').then(r => r.ok ? r.json() : null).then(j => {
+      if (j?.data && Object.keys(j.data).length) setCms(j.data);
+    }).catch(() => {});
+  }, []);
+  const cmsHero    = cms?.hero || null;
+  const cmsStats   = (cms?.stats && cms.stats.length) ? cms.stats : null;
+  const cmsPlans   = (cms?.plans && cms.plans.length) ? cms.plans : null;
+  const cmsHourly  = cms?.hourly_starts_at;
+  const cmsContact = cms?.contact;
+
   return (
     <div className="overflow-x-hidden">
       {/* ANNOUNCEMENT BAR */}
@@ -340,25 +353,27 @@ export default function Landing() {
         <div className="container-x relative pt-12 pb-24 grid lg:grid-cols-2 gap-12 items-center">
           <div className="animate-slide-up">
             <span className="badge bg-white/80 text-brand-700 mb-4 shadow-sm border border-brand-100">
-              <Sparkles className="w-3.5 h-3.5" /> Made in India 🇮🇳 • For every Indian child
+              <Sparkles className="w-3.5 h-3.5" /> {cmsHero?.badge || 'Made in India 🇮🇳 • For every Indian child'}
             </span>
             <h1 className="h-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.05]">
-              Learning that feels<br />
-              like <span className="kid-underline text-gradient">play time</span> 🎉<br />
-              not <span className="line-through text-slate-400">homework</span>
+              {cmsHero?.title_part1 || 'Learning that feels'}<br />
+              like <span className="kid-underline text-gradient">{cmsHero?.title_highlight || 'play time'}</span> 🎉<br />
+              {cmsHero ? cmsHero.title_part2 : <>not <span className="line-through text-slate-400">homework</span></>}
             </h1>
             <p className="mt-6 text-lg text-slate-700 max-w-xl leading-relaxed">
-              India's friendliest 1-on-1 tutoring platform — connect with a <b>verified, hand-picked tutor</b> for
-              your child, from <b>Class 1 to Class 12</b>. Boards, JEE, NEET, Olympiads, coding, music & more —
-              all from <b>₹199 / hour</b>.
+              {cmsHero?.subtitle || (
+                <>India's friendliest 1-on-1 tutoring platform — connect with a <b>verified, hand-picked tutor</b> for
+                your child, from <b>Class 1 to Class 12</b>. Boards, JEE, NEET, Olympiads, coding, music & more —
+                all from <b>₹{cmsHourly || 199} / hour</b>.</>
+              )}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/signup" className="btn-primary text-base px-6 py-3.5">
-                <Rocket className="w-4 h-4" /> Start free — book a demo
+                <Rocket className="w-4 h-4" /> {cmsHero?.cta_primary || 'Start free — book a demo'}
               </Link>
               <Link to="/find-tutors" className="btn-outline text-base px-6 py-3.5">
-                <Search className="w-4 h-4" /> Browse 3,400+ tutors
+                <Search className="w-4 h-4" /> {cmsHero?.cta_secondary || 'Browse 3,400+ tutors'}
               </Link>
             </div>
 
@@ -459,13 +474,15 @@ export default function Landing() {
       {/* STATS */}
       <section className="bg-white border-y border-slate-100">
         <div className="container-x py-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {stats.map(s => (
-            <div key={s.l} className="text-center">
-              <s.icon className={`w-7 h-7 mx-auto mb-2 ${s.color}`} />
-              <div className="text-2xl md:text-3xl font-extrabold text-slate-900">{s.v}</div>
-              <div className="text-xs md:text-sm text-slate-500 mt-1 font-semibold">{s.l}</div>
-            </div>
-          ))}
+          {(cmsStats || stats.map(s => ({ value: s.v, label: s.l }))).map((s, i) => {
+            const fallback = stats[i] || stats[0];
+            return (
+            <div key={i} className="text-center">
+              <fallback.icon className={`w-7 h-7 mx-auto mb-2 ${fallback.color}`} />
+              <div className="text-2xl md:text-3xl font-extrabold text-slate-900">{s.value}</div>
+              <div className="text-xs md:text-sm text-slate-500 mt-1 font-semibold">{s.label}</div>
+            </div>);
+          })}
         </div>
       </section>
 
@@ -677,8 +694,10 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {plans.map(p => (
-              <div key={p.name} className={`card p-7 border-2 ${p.color} relative`}>
+            {(cmsPlans || plans).map((p, idx) => {
+              const fb = plans[idx] || plans[0];
+              return (
+              <div key={p.name + idx} className={`card p-7 border-2 ${fb.color} relative`}>
                 {p.badge && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 pill bg-sunny-400 text-slate-900 shadow-sunny">
                     <Sparkles className="w-3.5 h-3.5" /> {p.badge}
@@ -688,23 +707,23 @@ export default function Landing() {
                 <p className="text-sm text-slate-600 mt-1">{p.desc}</p>
                 <div className="mt-5 flex items-baseline gap-1">
                   <IndianRupee className="w-6 h-6 text-slate-700" />
-                  <span className="text-5xl font-extrabold text-slate-900">{p.price.toLocaleString('en-IN')}</span>
+                  <span className="text-5xl font-extrabold text-slate-900">{Number(p.price).toLocaleString('en-IN')}</span>
                   <span className="text-slate-500">/ {p.per}</span>
                 </div>
-                <Link to="/signup" className={`${p.btn} w-full mt-5 justify-center`}>Choose {p.name}</Link>
+                <Link to="/signup" className={`${fb.btn} w-full mt-5 justify-center`}>Choose {p.name}</Link>
                 <ul className="mt-6 space-y-2.5">
-                  {p.features.map((f,i) => (
+                  {(p.features || []).map((f,i) => (
                     <li key={i} className="flex gap-2 text-sm text-slate-700">
                       <CheckCircle2 className="w-5 h-5 text-mint-500 flex-shrink-0" /> {f}
                     </li>
                   ))}
                 </ul>
-              </div>
-            ))}
+              </div>);
+            })}
           </div>
 
           <p className="text-center text-sm text-slate-500 mt-8">
-            Or pay-per-class from <b className="text-brand-700">₹199 / hour</b> — no commitment.
+            Or pay-per-class from <b className="text-brand-700">₹{cmsHourly || 199} / hour</b> — no commitment.
             All prices include GST. <Link to="/how-it-works" className="text-brand-700 underline font-semibold">See pricing details</Link>.
           </p>
         </div>

@@ -59,23 +59,58 @@ router.delete('/users/:id', async (req, res) => {
 
 // Admin-driven user registration (e.g. register a student on the family's behalf)
 router.post('/users/register', async (req, res) => {
-  const { email, password, full_name, role = 'student', phone, city } = req.body || {};
+  const { email, password, full_name, role = 'student', phone, city, grade_level, preferred_subjects } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   if (!['student', 'tutor'].includes(role)) return res.status(400).json({ error: 'role must be student or tutor' });
 
   const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
     email, password, email_confirm: true,
-    user_metadata: { full_name, role, phone, city }
+    user_metadata: { full_name, role, phone }
   });
   if (createErr) return res.status(400).json({ error: createErr.message });
 
-  // Mirror into public.users (handle both schemas where trigger may or may not exist)
+  // public.users only has id, email, full_name, role, is_active, created_at
   await supabaseAdmin.from('users').upsert({
-    id: created.user.id, email, full_name: full_name || null, role,
-    phone: phone || null, city: city || null, is_active: true
+    id: created.user.id, email, full_name: full_name || null, role, is_active: true
   }, { onConflict: 'id' });
 
+  // Phone/city/grade live on the role-specific profile table
+  if (role === 'student') {
+    await supabaseAdmin.from('student_profiles').upsert({
+      user_id: created.user.id, grade_level: grade_level || null,
+      preferred_subjects: preferred_subjects || [], city: city || null
+    }, { onConflict: 'user_id' });
+  }
+
   res.json({ user: created.user });
+});
+
+// Admin: read/write site content (landing JSON)
+router.get('/site/content/:id', async (req, res) => {
+  const id = req.params.id || 'landing';
+  const { data, error } = await supabaseAdmin
+    .from('site_content').select('data, updated_at').eq('id', id).maybeSingle();
+  if (error) {
+    if (/does not exist|schema cache/i.test(error.message)) return res.json({ data: {}, missing_table: true });
+    return res.status(400).json({ error: error.message });
+  }
+  res.json({ data: data?.data || {}, updated_at: data?.updated_at });
+});
+
+router.patch('/site/content/:id', async (req, res) => {
+  const id = req.params.id || 'landing';
+  const { data: incoming } = req.body || {};
+  if (!incoming || typeof incoming !== 'object') return res.status(400).json({ error: 'data object required' });
+  const { data, error } = await supabaseAdmin
+    .from('site_content').upsert({ id, data: incoming, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+    .select().single();
+  if (error) {
+    if (/does not exist|schema cache/i.test(error.message)) {
+      return res.status(412).json({ error: 'site_content table missing — run supabase/site_content.sql in the Supabase SQL editor.' });
+    }
+    return res.status(400).json({ error: error.message });
+  }
+  res.json({ data: data.data, updated_at: data.updated_at });
 });
 
 // All booking enquiries / requests across the platform

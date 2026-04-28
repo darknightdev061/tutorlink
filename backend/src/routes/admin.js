@@ -118,15 +118,29 @@ router.get('/requests', async (req, res) => {
   const status = req.query.status;
   let q = supabaseAdmin
     .from('requests')
-    .select('*, student:student_id(id, email, full_name, phone, city), tutor:tutor_id(id, email, full_name)')
+    .select('*, student:student_id(id, email, full_name), tutor:tutor_id(id, email, full_name)')
     .order('created_at', { ascending: false });
   if (status) q = q.eq('status', status);
   const { data, error } = await q;
   if (error) return res.status(400).json({ error: error.message });
+
+  // Enrich with student city (from student_profiles) so admin can route follow-up by location
+  if (data?.length) {
+    const ids = [...new Set(data.map(r => r.student_id))];
+    const { data: profs } = await supabaseAdmin
+      .from('student_profiles').select('user_id, city, grade_level').in('user_id', ids);
+    const byId = Object.fromEntries((profs || []).map(p => [p.user_id, p]));
+    data.forEach(r => {
+      if (r.student) {
+        r.student.city = byId[r.student_id]?.city || null;
+        r.student.grade_level = byId[r.student_id]?.grade_level || null;
+      }
+    });
+  }
   res.json({ requests: data });
 });
 
-// Leads: users who signed up but never booked anything (helps admin follow up)
+// Leads: students who signed up but never booked anything (helps admin follow up)
 router.get('/leads', async (_req, res) => {
   const { data: users, error: ue } = await supabaseAdmin
     .from('users').select('*').eq('role', 'student').order('created_at', { ascending: false });
@@ -135,6 +149,19 @@ router.get('/leads', async (_req, res) => {
   if (re) return res.status(400).json({ error: re.message });
   const booked = new Set((reqs || []).map(r => r.student_id));
   const leads = (users || []).filter(u => !booked.has(u.id));
+
+  if (leads.length) {
+    const { data: profs } = await supabaseAdmin
+      .from('student_profiles').select('user_id, city, grade_level, preferred_subjects')
+      .in('user_id', leads.map(l => l.id));
+    const byId = Object.fromEntries((profs || []).map(p => [p.user_id, p]));
+    leads.forEach(l => {
+      l.city = byId[l.id]?.city || null;
+      l.grade_level = byId[l.id]?.grade_level || null;
+      l.preferred_subjects = byId[l.id]?.preferred_subjects || [];
+    });
+  }
+
   res.json({ leads });
 });
 

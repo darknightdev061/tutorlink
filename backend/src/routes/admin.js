@@ -50,7 +50,7 @@ router.get('/users', async (req, res) => {
   const [studentProfsRes, tutorProfsRes] = await Promise.all([
     studentIds.length
       ? supabaseAdmin.from('student_profiles')
-          .select('user_id, roll_number, grade_level, preferred_subjects, city, zip_code, guardian_name, guardian_phone, alternate_phone')
+          .select('user_id, roll_number, grade_level, preferred_subjects, city, zip_code, state, address_line1, address_line2, guardian_name, guardian_relation, guardian_phone, guardian_email, alternate_phone')
           .in('user_id', studentIds)
       : Promise.resolve({ data: [] }),
     tutorIds.length
@@ -86,9 +86,9 @@ router.delete('/users/:id', async (req, res) => {
 router.post('/users/register', async (req, res) => {
   const {
     email, password, full_name, role = 'student',
-    phone, city, zip_code,
+    phone, city, zip_code, state, address_line1, address_line2,
     grade_level, preferred_subjects, roll_number,
-    guardian_name, guardian_phone, alternate_phone
+    guardian_name, guardian_relation, guardian_phone, guardian_email, alternate_phone
   } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   if (!['student', 'tutor'].includes(role)) return res.status(400).json({ error: 'role must be student or tutor' });
@@ -121,10 +121,15 @@ router.post('/users/register', async (req, res) => {
       roll_number: roll,
       grade_level: grade_level || null,
       preferred_subjects: preferred_subjects || [],
+      address_line1: address_line1 || null,
+      address_line2: address_line2 || null,
       city: city || null,
+      state: state || null,
       zip_code: zip_code || null,
       guardian_name: guardian_name || null,
+      guardian_relation: guardian_relation || null,
       guardian_phone: guardian_phone || null,
+      guardian_email: guardian_email || null,
       alternate_phone: alternate_phone || null
     }, { onConflict: 'user_id' });
   }

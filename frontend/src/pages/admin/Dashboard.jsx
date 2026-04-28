@@ -356,16 +356,37 @@ function UserRow({ u, onToggle, onDelete }) {
           </div>
 
           {isStudent && u.student && (
-            <div className="mt-3 grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              {u.student.grade_level && <div><b>Class:</b> {u.student.grade_level}</div>}
-              {u.student.city        && <div className="inline-flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {u.student.city}{u.student.zip_code ? ' · ' + u.student.zip_code : ''}</div>}
-              {u.student.guardian_name  && <div><b>Guardian:</b> {u.student.guardian_name}</div>}
-              {u.student.guardian_phone && <div className="inline-flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {u.student.guardian_phone} <span className="text-slate-400">(guardian)</span></div>}
-              {u.student.alternate_phone && <div className="inline-flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {u.student.alternate_phone} <span className="text-slate-400">(alt)</span></div>}
-              {u.student.preferred_subjects?.length > 0 && (
-                <div className="sm:col-span-2 mt-1">
-                  <b>Subjects:</b>{' '}
-                  {u.student.preferred_subjects.map((s,i) => <span key={i} className="chip mr-1.5">{s}</span>)}
+            <div className="mt-3 space-y-3 text-sm">
+              <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
+                {u.student.grade_level && <div><b>Class:</b> {u.student.grade_level}</div>}
+                {u.student.preferred_subjects?.length > 0 && (
+                  <div className="sm:col-span-2">
+                    <b>Tuition for:</b>{' '}
+                    {u.student.preferred_subjects.map((s,i) => <span key={i} className="chip mr-1.5">{s}</span>)}
+                  </div>
+                )}
+              </div>
+
+              {(u.student.address_line1 || u.student.city || u.student.state) && (
+                <div className="bg-slate-50 rounded-xl p-3">
+                  <div className="font-bold text-slate-700 text-xs uppercase tracking-wide mb-1 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> Address</div>
+                  <div className="text-slate-700">
+                    {[u.student.address_line1, u.student.address_line2].filter(Boolean).join(', ')}
+                    {(u.student.address_line1 || u.student.address_line2) && <br />}
+                    {[u.student.city, u.student.state, u.student.zip_code].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              )}
+
+              {(u.student.guardian_name || u.student.guardian_phone || u.student.alternate_phone || u.student.guardian_email) && (
+                <div className="bg-brand-50/60 rounded-xl p-3">
+                  <div className="font-bold text-brand-700 text-xs uppercase tracking-wide mb-1">Guardian / contact</div>
+                  <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-slate-700">
+                    {u.student.guardian_name     && <div><b>{u.student.guardian_relation || 'Guardian'}:</b> {u.student.guardian_name}</div>}
+                    {u.student.guardian_phone    && <div className="inline-flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> <a href={`tel:${u.student.guardian_phone}`} className="hover:text-brand-700">{u.student.guardian_phone}</a></div>}
+                    {u.student.alternate_phone   && <div className="inline-flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> <a href={`tel:${u.student.alternate_phone}`} className="hover:text-brand-700">{u.student.alternate_phone}</a> <span className="text-slate-400 text-xs">(alt)</span></div>}
+                    {u.student.guardian_email    && <div className="inline-flex items-center gap-1"><Mail className="w-3 h-3 text-slate-400" /> <a href={`mailto:${u.student.guardian_email}`} className="hover:text-brand-700">{u.student.guardian_email}</a></div>}
+                  </div>
                 </div>
               )}
             </div>
@@ -531,8 +552,10 @@ function RegisterStudent({ onCreated }) {
     full_name: '', email: '', password: '',
     roll_number: '', grade_level: '',
     preferred_subjects: '',
-    city: '', zip_code: '',
-    guardian_name: '', guardian_phone: '', alternate_phone: ''
+    address_line1: '', address_line2: '',
+    city: '', state: '', zip_code: '',
+    guardian_name: '', guardian_relation: '', guardian_phone: '',
+    guardian_email: '', alternate_phone: ''
   };
   const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState(false);
@@ -549,9 +572,12 @@ function RegisterStudent({ onCreated }) {
         roll_number: form.roll_number || undefined,
         grade_level: form.grade_level,
         preferred_subjects: subjects,
-        city: form.city, zip_code: form.zip_code,
+        address_line1: form.address_line1, address_line2: form.address_line2,
+        city: form.city, state: form.state, zip_code: form.zip_code,
         guardian_name: form.guardian_name,
+        guardian_relation: form.guardian_relation,
         guardian_phone: form.guardian_phone,
+        guardian_email: form.guardian_email,
         alternate_phone: form.alternate_phone
       });
       toast.success(`Student ${form.full_name || form.email} registered`);
@@ -580,12 +606,24 @@ function RegisterStudent({ onCreated }) {
               <input className="input" type="text" value={form.password} minLength={6} onChange={e => set('password', e.target.value)} placeholder="min 6 characters" required /></div>
             <div><label className="label">Class / Grade</label>
               <input className="input" value={form.grade_level} onChange={e => set('grade_level', e.target.value)} placeholder="Class 7" /></div>
-            <div><label className="label">City</label>
-              <input className="input" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Bengaluru" /></div>
-            <div><label className="label">PIN / Zip</label>
-              <input className="input" value={form.zip_code} onChange={e => set('zip_code', e.target.value)} placeholder="560038" /></div>
             <div className="sm:col-span-2"><label className="label">Subjects taking tuition for (comma-separated)</label>
               <input className="input" value={form.preferred_subjects} onChange={e => set('preferred_subjects', e.target.value)} placeholder="Mathematics, Science, English" /></div>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Address</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2"><label className="label">Address line 1</label>
+              <input className="input" value={form.address_line1} onChange={e => set('address_line1', e.target.value)} placeholder="Flat 402, Symphony Apartments, Baner Road" /></div>
+            <div className="sm:col-span-2"><label className="label">Address line 2 (optional)</label>
+              <input className="input" value={form.address_line2} onChange={e => set('address_line2', e.target.value)} placeholder="Aundh, near Westend Mall" /></div>
+            <div><label className="label">City</label>
+              <input className="input" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Bengaluru" /></div>
+            <div><label className="label">State</label>
+              <input className="input" value={form.state} onChange={e => set('state', e.target.value)} placeholder="Karnataka" /></div>
+            <div><label className="label">PIN / Zip</label>
+              <input className="input" value={form.zip_code} onChange={e => set('zip_code', e.target.value)} placeholder="560038" /></div>
           </div>
         </div>
 
@@ -593,11 +631,15 @@ function RegisterStudent({ onCreated }) {
           <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Guardian / contact</h3>
           <div className="grid sm:grid-cols-2 gap-4">
             <div><label className="label">Guardian name</label>
-              <input className="input" value={form.guardian_name} onChange={e => set('guardian_name', e.target.value)} placeholder="Rohan Sharma (father)" /></div>
+              <input className="input" value={form.guardian_name} onChange={e => set('guardian_name', e.target.value)} placeholder="Rohan Sharma" /></div>
+            <div><label className="label">Relation</label>
+              <input className="input" value={form.guardian_relation} onChange={e => set('guardian_relation', e.target.value)} placeholder="Father / Mother / Guardian" /></div>
             <div><label className="label">Guardian phone</label>
               <input className="input" value={form.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} placeholder="+91 90000 11111" /></div>
-            <div className="sm:col-span-2"><label className="label">Alternate phone</label>
+            <div><label className="label">Alternate phone</label>
               <input className="input" value={form.alternate_phone} onChange={e => set('alternate_phone', e.target.value)} placeholder="+91 90000 22222" /></div>
+            <div className="sm:col-span-2"><label className="label">Guardian email</label>
+              <input className="input" type="email" value={form.guardian_email} onChange={e => set('guardian_email', e.target.value)} placeholder="parent@example.com" /></div>
           </div>
         </div>
 

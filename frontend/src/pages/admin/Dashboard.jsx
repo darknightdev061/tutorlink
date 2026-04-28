@@ -39,21 +39,32 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Confirm we're signed in as admin and force-refresh the auth/me round trip
+    // Use the role from AuthContext if available — avoids a second /auth/me round trip.
+    // Fall back to a fresh /auth/me only when profile isn't loaded yet (cold reloads).
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) { setStatsErr('No active session — please log in again.'); return; }
-        const { user } = await api.get('/api/auth/me');
-        setMe(user);
-        if (user?.role !== 'admin') {
-          setStatsErr(`Logged in as ${user?.role || 'unknown'} — admin access required.`);
+
+        let role = profile?.role;
+        if (!role) {
+          try {
+            const { user } = await api.get('/api/auth/me');
+            setMe(user);
+            role = user?.role;
+          } catch (e) { /* ignore — fall through and try stats anyway */ }
+        } else {
+          setMe({ email: profile.email, full_name: profile.full_name, role });
+        }
+
+        if (role && role !== 'admin') {
+          setStatsErr(`Logged in as ${role} — admin access required.`);
           return;
         }
         await refreshStats();
       } catch (e) { setStatsErr(e.message); }
     })();
-  }, []);
+  }, [profile?.role]);
 
   const role = me?.role || profile?.role;
   const email = me?.email || profile?.email;
@@ -244,22 +255,40 @@ function TutorApplications({ onChange }) {
   );
 }
 
-/* ------------------------- USERS (Students) ------------------------- */
+/* ------------------------- USERS (Students / Tutors) ------------------------- */
+// In-memory cache so flipping tabs doesn't re-fetch
+const usersCache = {};
+
 function UsersTab({ role: initialRole, onChange }) {
-  const [list, setList] = useState([]);
+  const [list, setList] = useState(() => usersCache[initialRole || ''] || []);
   const [role, setRole] = useState(initialRole || '');
   const [q, setQ] = useState('');
+  const [busy, setBusy] = useState(!usersCache[initialRole || '']);
+  const [err, setErr] = useState('');
 
-  const load = () => {
-    const qs = role ? `?role=${role}` : '';
-    api.get(`/api/admin/users${qs}`).then(r => setList(r.users || [])).catch(e => toast.error(e.message));
+  const load = async () => {
+    setErr(''); setBusy(true);
+    try {
+      const qs = role ? `?role=${role}` : '';
+      const r = await api.get(`/api/admin/users${qs}`);
+      const users = r.users || [];
+      usersCache[role] = users;
+      setList(users);
+    } catch (e) { setErr(e.message); toast.error(e.message); }
+    finally { setBusy(false); }
   };
   useEffect(() => { load(); }, [role]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return list;
-    return list.filter(u => (u.email || '').toLowerCase().includes(s) || (u.full_name || '').toLowerCase().includes(s));
+    return list.filter(u =>
+      (u.email || '').toLowerCase().includes(s) ||
+      (u.full_name || '').toLowerCase().includes(s) ||
+      (u.student?.roll_number || '').toLowerCase().includes(s) ||
+      (u.student?.preferred_subjects || []).join(' ').toLowerCase().includes(s) ||
+      (u.tutor?.subjects || []).join(' ').toLowerCase().includes(s)
+    );
   }, [list, q]);
 
   const toggleActive = async (u) => {
@@ -285,47 +314,91 @@ function UsersTab({ role: initialRole, onChange }) {
         ))}
         <div className="ml-auto relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name or email…"
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, email, roll, subject…"
             className="input pl-9 py-2 w-72" />
         </div>
       </div>
 
-      <div className="card p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-slate-600">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Joined</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-500">No users.</td></tr>
+      {busy && list.length === 0 && <div className="text-slate-500 py-4">Loading…</div>}
+      {err && !list.length && <div className="card-fun p-4 bg-red-50 border-red-200 text-red-700 text-sm">{err}</div>}
+
+      <div className="space-y-3">
+        {filtered.length === 0 && !busy && <div className="text-slate-500">No users.</div>}
+        {filtered.map(u => (
+          <UserRow key={u.id} u={u} onToggle={toggleActive} onDelete={del} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UserRow({ u, onToggle, onDelete }) {
+  const isStudent = u.role === 'student';
+  const isTutor   = u.role === 'tutor';
+  return (
+    <div className="card-fun p-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-[280px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-bold text-lg">{u.full_name || '— unnamed —'}</span>
+            <span className={`pill capitalize ${isStudent ? 'bg-brand-100 text-brand-700' : isTutor ? 'bg-candy-100 text-candy-700' : 'bg-slate-200 text-slate-700'}`}>{u.role}</span>
+            {isStudent && u.student?.roll_number && (
+              <span className="pill bg-sunny-100 text-sunny-800">Roll {u.student.roll_number}</span>
+            )}
+            <span className={`pill ${u.is_active ? 'bg-mint-100 text-mint-700' : 'bg-red-100 text-red-700'}`}>{u.is_active ? 'active' : 'suspended'}</span>
+            {isTutor && u.tutor?.approval_status && (
+              <span className={`pill capitalize ${u.tutor.approval_status === 'approved' ? 'bg-mint-100 text-mint-700' : u.tutor.approval_status === 'pending' ? 'bg-sunny-100 text-sunny-800' : 'bg-red-100 text-red-700'}`}>{u.tutor.approval_status}</span>
+            )}
+          </div>
+          <div className="text-sm text-slate-500 mt-1 flex flex-wrap gap-x-3">
+            <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3" />{u.email}</span>
+            <span>Joined {new Date(u.created_at).toLocaleDateString('en-IN')}</span>
+          </div>
+
+          {isStudent && u.student && (
+            <div className="mt-3 grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              {u.student.grade_level && <div><b>Class:</b> {u.student.grade_level}</div>}
+              {u.student.city        && <div className="inline-flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {u.student.city}{u.student.zip_code ? ' · ' + u.student.zip_code : ''}</div>}
+              {u.student.guardian_name  && <div><b>Guardian:</b> {u.student.guardian_name}</div>}
+              {u.student.guardian_phone && <div className="inline-flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {u.student.guardian_phone} <span className="text-slate-400">(guardian)</span></div>}
+              {u.student.alternate_phone && <div className="inline-flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {u.student.alternate_phone} <span className="text-slate-400">(alt)</span></div>}
+              {u.student.preferred_subjects?.length > 0 && (
+                <div className="sm:col-span-2 mt-1">
+                  <b>Subjects:</b>{' '}
+                  {u.student.preferred_subjects.map((s,i) => <span key={i} className="chip mr-1.5">{s}</span>)}
+                </div>
               )}
-              {filtered.map(u => (
-                <tr key={u.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 font-semibold">{u.full_name || '—'}</td>
-                  <td className="px-4 py-3">{u.email}</td>
-                  <td className="px-4 py-3 capitalize">{u.role}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge ${u.is_active ? 'bg-mint-100 text-mint-700' : 'bg-red-100 text-red-700'}`}>
-                      {u.is_active ? 'active' : 'suspended'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{new Date(u.created_at).toLocaleDateString('en-IN')}</td>
-                  <td className="px-4 py-3 flex gap-1 justify-end">
-                    <button onClick={() => toggleActive(u)} title={u.is_active ? 'Suspend' : 'Reactivate'} className="btn-ghost"><Power className="w-4 h-4" /></button>
-                    <button onClick={() => del(u)} title="Delete" className="btn-ghost text-red-600"><Trash2 className="w-4 h-4" /></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            </div>
+          )}
+
+          {isTutor && u.tutor && (
+            <div className="mt-3 grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              {u.tutor.subjects?.length > 0 && (
+                <div className="sm:col-span-2">
+                  <b>Teaches:</b>{' '}
+                  {u.tutor.subjects.map((s,i) => <span key={i} className="chip mr-1.5">{s}</span>)}
+                </div>
+              )}
+              {u.tutor.qualifications && <div className="sm:col-span-2"><b>Qualifications:</b> <span className="text-slate-600">{u.tutor.qualifications}</span></div>}
+              {u.tutor.bio            && <div className="sm:col-span-2 text-slate-600 italic">"{u.tutor.bio}"</div>}
+              {typeof u.tutor.hourly_rate === 'number' && <div className="inline-flex items-center"><b>Rate:</b><IndianRupee className="w-3 h-3 mx-0.5 text-slate-500" />{u.tutor.hourly_rate}/hr</div>}
+              {typeof u.tutor.experience_years === 'number' && <div><b>Experience:</b> {u.tutor.experience_years} yrs</div>}
+              {u.tutor.city           && <div className="inline-flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {u.tutor.city}</div>}
+              {u.tutor.languages?.length > 0 && <div><b>Languages:</b> {u.tutor.languages.join(', ')}</div>}
+              {(u.tutor.rating > 0 || u.tutor.total_reviews > 0) && (
+                <div><b>Rating:</b> {u.tutor.rating} ★ ({u.tutor.total_reviews} reviews)</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-1.5">
+          <button onClick={() => onToggle(u)} title={u.is_active ? 'Suspend' : 'Reactivate'} className="btn-outline py-1.5 px-3 text-xs">
+            <Power className="w-3.5 h-3.5" /> {u.is_active ? 'Suspend' : 'Reactivate'}
+          </button>
+          <button onClick={() => onDelete(u)} title="Delete" className="btn-ghost text-red-600 py-1.5 px-3 text-xs">
+            <Trash2 className="w-3.5 h-3.5" /> Delete
+          </button>
         </div>
       </div>
     </div>
@@ -454,7 +527,14 @@ function Leads() {
 
 /* ------------------------- REGISTER STUDENT ------------------------- */
 function RegisterStudent({ onCreated }) {
-  const [form, setForm] = useState({ email: '', password: '', full_name: '', phone: '', city: '' });
+  const empty = {
+    full_name: '', email: '', password: '',
+    roll_number: '', grade_level: '',
+    preferred_subjects: '',
+    city: '', zip_code: '',
+    guardian_name: '', guardian_phone: '', alternate_phone: ''
+  };
+  const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e) => {
@@ -462,45 +542,65 @@ function RegisterStudent({ onCreated }) {
     if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
     setBusy(true);
     try {
-      await api.post('/api/admin/users/register', { ...form, role: 'student' });
+      const subjects = form.preferred_subjects.split(',').map(s => s.trim()).filter(Boolean);
+      await api.post('/api/admin/users/register', {
+        role: 'student',
+        full_name: form.full_name, email: form.email, password: form.password,
+        roll_number: form.roll_number || undefined,
+        grade_level: form.grade_level,
+        preferred_subjects: subjects,
+        city: form.city, zip_code: form.zip_code,
+        guardian_name: form.guardian_name,
+        guardian_phone: form.guardian_phone,
+        alternate_phone: form.alternate_phone
+      });
       toast.success(`Student ${form.full_name || form.email} registered`);
-      setForm({ email: '', password: '', full_name: '', phone: '', city: '' });
+      setForm(empty);
       onCreated?.();
     } catch (e) { toast.error(e.message); }
     finally { setBusy(false); }
   };
+  const set = (k, v) => setForm({ ...form, [k]: v });
 
   return (
-    <div className="max-w-2xl">
-      <p className="text-slate-600 mb-5">Onboard a student directly. They'll receive login credentials by email and can log in immediately.</p>
-      <form onSubmit={submit} className="card-fun p-6 space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Full name</label>
-            <input className="input" value={form.full_name}
-              onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder="Aarav Sharma" required />
-          </div>
-          <div>
-            <label className="label">Email</label>
-            <input className="input" type="email" value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })} placeholder="parent@example.com" required />
-          </div>
-          <div>
-            <label className="label">Temporary password</label>
-            <input className="input" type="text" value={form.password} minLength={6}
-              onChange={e => setForm({ ...form, password: e.target.value })} placeholder="min 6 characters" required />
-          </div>
-          <div>
-            <label className="label">Phone (with country code)</label>
-            <input className="input" value={form.phone}
-              onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91 90000 12345" />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="label">City</label>
-            <input className="input" value={form.city}
-              onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Bengaluru" />
+    <div className="max-w-3xl">
+      <p className="text-slate-600 mb-5">Onboard a student directly. They'll receive login credentials by email and can log in immediately. Roll number is auto-generated (TL-XXXX) if you leave it blank.</p>
+      <form onSubmit={submit} className="card-fun p-6 space-y-6">
+
+        <div>
+          <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Student details</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><label className="label">Full name *</label>
+              <input className="input" value={form.full_name} onChange={e => set('full_name', e.target.value)} placeholder="Aarav Sharma" required /></div>
+            <div><label className="label">Roll number (optional)</label>
+              <input className="input" value={form.roll_number} onChange={e => set('roll_number', e.target.value)} placeholder="TL-0042 (auto if blank)" /></div>
+            <div><label className="label">Email *</label>
+              <input className="input" type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="parent@example.com" required /></div>
+            <div><label className="label">Temporary password *</label>
+              <input className="input" type="text" value={form.password} minLength={6} onChange={e => set('password', e.target.value)} placeholder="min 6 characters" required /></div>
+            <div><label className="label">Class / Grade</label>
+              <input className="input" value={form.grade_level} onChange={e => set('grade_level', e.target.value)} placeholder="Class 7" /></div>
+            <div><label className="label">City</label>
+              <input className="input" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Bengaluru" /></div>
+            <div><label className="label">PIN / Zip</label>
+              <input className="input" value={form.zip_code} onChange={e => set('zip_code', e.target.value)} placeholder="560038" /></div>
+            <div className="sm:col-span-2"><label className="label">Subjects taking tuition for (comma-separated)</label>
+              <input className="input" value={form.preferred_subjects} onChange={e => set('preferred_subjects', e.target.value)} placeholder="Mathematics, Science, English" /></div>
           </div>
         </div>
+
+        <div>
+          <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Guardian / contact</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><label className="label">Guardian name</label>
+              <input className="input" value={form.guardian_name} onChange={e => set('guardian_name', e.target.value)} placeholder="Rohan Sharma (father)" /></div>
+            <div><label className="label">Guardian phone</label>
+              <input className="input" value={form.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} placeholder="+91 90000 11111" /></div>
+            <div className="sm:col-span-2"><label className="label">Alternate phone</label>
+              <input className="input" value={form.alternate_phone} onChange={e => set('alternate_phone', e.target.value)} placeholder="+91 90000 22222" /></div>
+          </div>
+        </div>
+
         <button disabled={busy} className="btn-primary"><UserPlus className="w-4 h-4" /> {busy ? 'Registering…' : 'Register student'}</button>
       </form>
     </div>

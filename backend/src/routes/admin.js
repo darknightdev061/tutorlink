@@ -38,9 +38,34 @@ router.get('/users', async (req, res) => {
   const role = req.query.role;
   let q = supabaseAdmin.from('users').select('*').order('created_at', { ascending: false });
   if (role) q = q.eq('role', role);
-  const { data, error } = await q;
+  const { data: users, error } = await q;
   if (error) return res.status(400).json({ error: error.message });
-  res.json({ users: data });
+  if (!users?.length) return res.json({ users: [] });
+
+  // Batch-fetch role-specific profile data so the admin can see roll, class,
+  // subjects, guardian info etc in the same row.
+  const studentIds = users.filter(u => u.role === 'student').map(u => u.id);
+  const tutorIds   = users.filter(u => u.role === 'tutor').map(u => u.id);
+
+  const [studentProfsRes, tutorProfsRes] = await Promise.all([
+    studentIds.length
+      ? supabaseAdmin.from('student_profiles')
+          .select('user_id, roll_number, grade_level, preferred_subjects, city, zip_code, guardian_name, guardian_phone, alternate_phone')
+          .in('user_id', studentIds)
+      : Promise.resolve({ data: [] }),
+    tutorIds.length
+      ? supabaseAdmin.from('tutor_profiles')
+          .select('user_id, subjects, qualifications, bio, hourly_rate, experience_years, city, languages, approval_status, rating, total_reviews')
+          .in('user_id', tutorIds)
+      : Promise.resolve({ data: [] })
+  ]);
+  const sp = Object.fromEntries((studentProfsRes.data || []).map(p => [p.user_id, p]));
+  const tp = Object.fromEntries((tutorProfsRes.data || []).map(p => [p.user_id, p]));
+  users.forEach(u => {
+    if (u.role === 'student') u.student = sp[u.id] || null;
+    if (u.role === 'tutor')   u.tutor   = tp[u.id] || null;
+  });
+  res.json({ users });
 });
 
 router.patch('/users/:id/active', async (req, res) => {
@@ -59,7 +84,12 @@ router.delete('/users/:id', async (req, res) => {
 
 // Admin-driven user registration (e.g. register a student on the family's behalf)
 router.post('/users/register', async (req, res) => {
-  const { email, password, full_name, role = 'student', phone, city, grade_level, preferred_subjects } = req.body || {};
+  const {
+    email, password, full_name, role = 'student',
+    phone, city, zip_code,
+    grade_level, preferred_subjects, roll_number,
+    guardian_name, guardian_phone, alternate_phone
+  } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   if (!['student', 'tutor'].includes(role)) return res.status(400).json({ error: 'role must be student or tutor' });
 
@@ -69,16 +99,33 @@ router.post('/users/register', async (req, res) => {
   });
   if (createErr) return res.status(400).json({ error: createErr.message });
 
-  // public.users only has id, email, full_name, role, is_active, created_at
   await supabaseAdmin.from('users').upsert({
     id: created.user.id, email, full_name: full_name || null, role, is_active: true
   }, { onConflict: 'id' });
 
-  // Phone/city/grade live on the role-specific profile table
   if (role === 'student') {
+    // Auto-generate a TL-XXXX roll number if admin didn't specify one
+    let roll = roll_number;
+    if (!roll) {
+      const { data: max } = await supabaseAdmin
+        .from('student_profiles').select('roll_number')
+        .not('roll_number', 'is', null);
+      const n = (max || []).reduce((m, r) => {
+        const v = parseInt((r.roll_number || '').replace(/\D/g, ''), 10);
+        return isFinite(v) && v > m ? v : m;
+      }, 0);
+      roll = 'TL-' + String(n + 1).padStart(4, '0');
+    }
     await supabaseAdmin.from('student_profiles').upsert({
-      user_id: created.user.id, grade_level: grade_level || null,
-      preferred_subjects: preferred_subjects || [], city: city || null
+      user_id: created.user.id,
+      roll_number: roll,
+      grade_level: grade_level || null,
+      preferred_subjects: preferred_subjects || [],
+      city: city || null,
+      zip_code: zip_code || null,
+      guardian_name: guardian_name || null,
+      guardian_phone: guardian_phone || null,
+      alternate_phone: alternate_phone || null
     }, { onConflict: 'user_id' });
   }
 

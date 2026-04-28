@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import toast from 'react-hot-toast';
 import { LogIn, GraduationCap } from 'lucide-react';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, refresh } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
@@ -15,8 +16,18 @@ export default function Login() {
     setBusy(true);
     try {
       await signIn(form);
-      toast.success('Welcome back!');
-      nav('/');
+      try { await refresh?.(); } catch {}
+      try {
+        const { user } = await api.get('/api/auth/me');
+        toast.success(`Welcome, ${user?.full_name || user?.email}!`);
+        const dest = user?.role === 'admin' ? '/admin'
+                   : user?.role === 'tutor' ? '/tutor'
+                   : '/student';
+        nav(dest, { replace: true });
+      } catch {
+        toast.success('Welcome back!');
+        nav('/', { replace: true });
+      }
     } catch (err) { toast.error(err.message); }
     finally { setBusy(false); }
   };

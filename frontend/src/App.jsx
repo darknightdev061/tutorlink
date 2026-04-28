@@ -21,8 +21,6 @@ import TutorApply     from './pages/tutor/Apply';
 import TutorRequests  from './pages/tutor/Requests';
 
 import AdminDashboard from './pages/admin/Dashboard';
-import AdminTutors    from './pages/admin/Tutors';
-import AdminUsers     from './pages/admin/Users';
 
 export default function App() {
   return (
@@ -50,10 +48,10 @@ export default function App() {
             <Route path="/tutor/apply"    element={<ProtectedRoute roles={['tutor']}><TutorApply /></ProtectedRoute>} />
             <Route path="/tutor/requests" element={<ProtectedRoute roles={['tutor']}><TutorRequests /></ProtectedRoute>} />
 
-            {/* Admin */}
+            {/* Admin (single tabbed panel) */}
             <Route path="/admin"        element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/tutors" element={<ProtectedRoute roles={['admin']}><AdminTutors /></ProtectedRoute>} />
-            <Route path="/admin/users"  element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
+            <Route path="/admin/tutors" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/users"  element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Route>

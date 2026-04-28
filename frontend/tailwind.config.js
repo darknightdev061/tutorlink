@@ -4,41 +4,41 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Material UI palette — Indigo as brand
+        // Material UI Blue — professional primary (MUI default primary.main = 1976d2)
         brand: {
-          50:  '#e8eaf6', 100: '#c5cae9', 200: '#9fa8da',
-          300: '#7986cb', 400: '#5c6bc0', 500: '#3f51b5',
-          600: '#3949ab', 700: '#303f9f', 800: '#283593', 900: '#1a237e'
+          50:  '#e3f2fd', 100: '#bbdefb', 200: '#90caf9',
+          300: '#64b5f6', 400: '#42a5f5', 500: '#2196f3',
+          600: '#1e88e5', 700: '#1976d2', 800: '#1565c0', 900: '#0d47a1'
         },
-        // Material UI Pink — secondary
+        // Material UI Purple — refined secondary (MUI default secondary.main = 9c27b0)
         candy: {
-          50:  '#fce4ec', 100: '#f8bbd0', 200: '#f48fb1',
-          300: '#f06292', 400: '#ec407a', 500: '#e91e63',
-          600: '#d81b60', 700: '#c2185b', 800: '#ad1457', 900: '#880e4f'
+          50:  '#f3e5f5', 100: '#e1bee7', 200: '#ce93d8',
+          300: '#ba68c8', 400: '#ab47bc', 500: '#9c27b0',
+          600: '#8e24aa', 700: '#7b1fa2', 800: '#6a1b9a', 900: '#4a148c'
         },
-        // Material UI Amber — sunshine accent for kids
+        // Material UI Amber — warning accent
         sunny: {
           50:  '#fff8e1', 100: '#ffecb3', 200: '#ffe082',
           300: '#ffd54f', 400: '#ffca28', 500: '#ffc107',
           600: '#ffb300', 700: '#ffa000', 800: '#ff8f00', 900: '#ff6f00'
         },
-        // Material UI Teal — success / safe
+        // Material UI Green — success (MUI success.main = 2e7d32)
         mint: {
-          50:  '#e0f2f1', 100: '#b2dfdb', 200: '#80cbc4',
-          300: '#4db6ac', 400: '#26a69a', 500: '#009688',
-          600: '#00897b', 700: '#00796b', 800: '#00695c', 900: '#004d40'
+          50:  '#e8f5e9', 100: '#c8e6c9', 200: '#a5d6a7',
+          300: '#81c784', 400: '#66bb6a', 500: '#4caf50',
+          600: '#43a047', 700: '#388e3c', 800: '#2e7d32', 900: '#1b5e20'
         },
-        // Material UI Deep Orange — playful pop
+        // Material UI Orange — refined pop (less candy than Deep Orange)
         coral: {
-          50:  '#fbe9e7', 100: '#ffccbc', 200: '#ffab91',
-          300: '#ff8a65', 400: '#ff7043', 500: '#ff5722',
-          600: '#f4511e', 700: '#e64a19', 800: '#d84315', 900: '#bf360c'
+          50:  '#fff3e0', 100: '#ffe0b2', 200: '#ffcc80',
+          300: '#ffb74d', 400: '#ffa726', 500: '#ff9800',
+          600: '#fb8c00', 700: '#f57c00', 800: '#ef6c00', 900: '#e65100'
         },
-        // Material UI Deep Purple
+        // Material UI Indigo — supporting deep tone
         grape: {
-          50:  '#ede7f6', 100: '#d1c4e9', 200: '#b39ddb',
-          300: '#9575cd', 400: '#7e57c2', 500: '#673ab7',
-          600: '#5e35b1', 700: '#512da8', 800: '#4527a0', 900: '#311b92'
+          50:  '#e8eaf6', 100: '#c5cae9', 200: '#9fa8da',
+          300: '#7986cb', 400: '#5c6bc0', 500: '#3f51b5',
+          600: '#3949ab', 700: '#303f9f', 800: '#283593', 900: '#1a237e'
         }
       },
       fontFamily: {
@@ -46,10 +46,10 @@ export default {
         display: ['"Fredoka"', 'Nunito', 'system-ui', 'sans-serif']
       },
       boxShadow: {
-        playful: '0 10px 30px -8px rgba(63, 81, 181, .35)',
-        candy:   '0 10px 30px -8px rgba(233, 30, 99, .35)',
-        sunny:   '0 10px 30px -8px rgba(255, 193, 7, .45)',
-        mint:    '0 10px 30px -8px rgba(0, 150, 136, .35)'
+        playful: '0 10px 30px -8px rgba(25, 118, 210, .30)',
+        candy:   '0 10px 30px -8px rgba(156, 39, 176, .30)',
+        sunny:   '0 10px 30px -8px rgba(255, 160, 0, .35)',
+        mint:    '0 10px 30px -8px rgba(46, 125, 50, .25)'
       },
       animation: {
         'fade-in':  'fadeIn .6s ease-out',

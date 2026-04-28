@@ -5,7 +5,12 @@
     { "src": "backend/api/index.js",  "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "backend/api/index.js" },
-    { "src": "/(.*)",     "dest": "frontend/$1" }
+    { "src": "/api/(.*)",                                       "dest": "backend/api/index.js" },
+    { "src": "/assets/(.*)",                                    "dest": "frontend/assets/$1" },
+    { "src": "/favicon.svg",                                    "dest": "frontend/favicon.svg" },
+    { "src": "/cursor-cap.svg",                                 "dest": "frontend/cursor-cap.svg" },
+    { "src": "/cursor-cap-pointer.svg",                         "dest": "frontend/cursor-cap-pointer.svg" },
+    { "src": "/(.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|webp|woff2?))", "dest": "frontend/$1" },
+    { "src": "/(.*)",                                           "dest": "frontend/index.html" }
   ]
 }

@@ -16,23 +16,25 @@ const IMG = {
   heroKid:    'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80',
   classroom:  'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=1200&q=80',
   studyKid:   'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1000&q=80',
-  online:     'https://images.unsplash.com/photo-1596496050755-c923e73e42e3?auto=format&fit=crop&w=1000&q=80',
-  laptopKid:  'https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1000&q=80',
+  online:     'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?auto=format&fit=crop&w=1000&q=80',
+  laptopKid:  'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1000&q=80',
   reading:    'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1000&q=80',
   art:        'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1000&q=80',
   group:      'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=80',
   primary:    'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1000&q=80',
   middle:     'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80',
   high:       'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1000&q=80',
-  parent:     'https://images.unsplash.com/photo-1581578017093-cd30fce4eeb7?auto=format&fit=crop&w=1000&q=80',
-  india:      'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=80',
+  parent:     'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1000&q=80',
+  india:      'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80',
   notebook:   'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=80',
-  // Tutor avatars (Unsplash portrait sources via randomuser-style fallback)
+  // Tutor avatars (well-known stable Unsplash portraits)
   t1:         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
   t2:         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
   t3:         'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
-  t4:         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80'
+  t4:         'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80'
 };
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80';
+const onImgErr = (e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMG; };
 
 const subjects = [
   { name: 'Mathematics',     icon: Calculator,  color: 'bg-brand-100 text-brand-700',  count: 540, blurb: 'From times-tables to calculus' },
@@ -376,7 +378,7 @@ export default function Landing() {
             <div className="mt-8 flex items-center gap-3 text-sm text-slate-600">
               <div className="flex -space-x-2">
                 {[IMG.t1, IMG.t2, IMG.t3, IMG.t4].map((u,i) => (
-                  <img key={i} src={u} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                  <img onError={onImgErr} key={i} src={u} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
                 ))}
               </div>
               <div>
@@ -388,15 +390,15 @@ export default function Landing() {
 
           {/* HERO IMAGE COLLAGE */}
           <div className="relative h-[500px] hidden lg:block">
-            <img src={IMG.heroKid} alt="Happy student" loading="lazy"
+            <img onError={onImgErr} src={IMG.heroKid} alt="Happy student" loading="lazy"
               className="absolute top-0 right-0 w-[78%] h-[58%] object-cover rounded-3xl shadow-playful animate-float" />
-            <img src={IMG.online} alt="Online tutor" loading="lazy"
+            <img onError={onImgErr} src={IMG.online} alt="Online tutor" loading="lazy"
               className="absolute bottom-0 left-0 w-[62%] h-[48%] object-cover rounded-3xl shadow-candy animate-float [animation-delay:1.2s]" />
 
             {/* Floating tutor card */}
             <div className="absolute top-4 -left-2 card p-4 w-64 animate-pop bg-white">
               <div className="flex items-center gap-3">
-                <img src={IMG.t1} className="w-12 h-12 rounded-full object-cover ring-2 ring-brand-200" alt="" />
+                <img onError={onImgErr} src={IMG.t1} className="w-12 h-12 rounded-full object-cover ring-2 ring-brand-200" alt="" />
                 <div>
                   <div className="font-bold text-slate-900">Priya Sharma</div>
                   <div className="text-xs text-slate-500 flex items-center gap-1">
@@ -480,7 +482,7 @@ export default function Landing() {
             {ageGroups.map(g => (
               <div key={g.title} className="card-fun overflow-hidden group">
                 <div className="relative h-52 overflow-hidden">
-                  <img src={g.img} alt={g.title} loading="lazy"
+                  <img onError={onImgErr} src={g.img} alt={g.title} loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className={`absolute inset-0 bg-gradient-to-tr ${g.color} opacity-70 mix-blend-multiply`} />
                   <div className="absolute top-4 left-4">
@@ -597,7 +599,7 @@ export default function Landing() {
             {sampleTutors.map(t => (
               <div key={t.name} className="card-fun overflow-hidden">
                 <div className="relative h-44">
-                  <img src={t.avatar} alt={t.name} loading="lazy" className="w-full h-full object-cover" />
+                  <img onError={onImgErr} src={t.avatar} alt={t.name} loading="lazy" className="w-full h-full object-cover" />
                   <span className="absolute top-3 left-3 pill bg-white/95 text-brand-700"><BadgeCheck className="w-3.5 h-3.5 text-mint-500" /> {t.badge}</span>
                   <span className="absolute bottom-3 right-3 pill bg-sunny-400 text-slate-900"><Star className="w-3.5 h-3.5 fill-current" /> {t.rate}</span>
                 </div>
@@ -627,7 +629,7 @@ export default function Landing() {
       <section className="section-pad container-x">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative">
-            <img src={IMG.india} alt="Indian classroom" loading="lazy"
+            <img onError={onImgErr} src={IMG.india} alt="Indian classroom" loading="lazy"
               className="rounded-3xl shadow-playful w-full h-[480px] object-cover" />
             <div className="absolute -bottom-6 -right-6 card p-5 hidden md:block w-64">
               <div className="flex items-center gap-2 text-mint-600 font-bold mb-1">
@@ -730,7 +732,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="relative">
-            <img src={IMG.parent} alt="Parent and child" loading="lazy"
+            <img onError={onImgErr} src={IMG.parent} alt="Parent and child" loading="lazy"
               className="rounded-3xl shadow-mint w-full h-[480px] object-cover" />
             <div className="absolute top-6 -left-4 card p-4 w-56 animate-bounce-soft">
               <div className="text-xs text-slate-500">Class started</div>
@@ -758,7 +760,7 @@ export default function Landing() {
           <div className="grid md:grid-cols-2 gap-6">
             {testimonials.map(t => (
               <div key={t.name} className="card-fun p-6 flex gap-4">
-                <img src={t.img} className="w-20 h-20 rounded-2xl object-cover flex-shrink-0" alt={t.name} loading="lazy" />
+                <img onError={onImgErr} src={t.img} className="w-20 h-20 rounded-2xl object-cover flex-shrink-0" alt={t.name} loading="lazy" />
                 <div>
                   <div className="flex gap-0.5 text-sunny-500 mb-2">
                     {Array.from({length: t.stars}).map((_,i) => <Star key={i} className="w-4 h-4 fill-sunny-500" />)}
@@ -796,7 +798,7 @@ export default function Landing() {
             <Link to="/become-tutor" className="btn-primary mt-7">Become a tutor — apply free <ArrowRight className="w-4 h-4" /></Link>
           </div>
           <div className="relative min-h-[320px]">
-            <img src={IMG.classroom} className="absolute inset-0 w-full h-full object-cover" alt="Tutor" loading="lazy" />
+            <img onError={onImgErr} src={IMG.classroom} className="absolute inset-0 w-full h-full object-cover" alt="Tutor" loading="lazy" />
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-900/70 via-grape-700/40 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 text-white">
               <div className="text-3xl font-bold h-display">3,400+ tutors</div>

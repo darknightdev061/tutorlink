@@ -45,27 +45,27 @@ html, body { font-family: 'Nunito', system-ui, sans-serif; }
 
 .gradient-hero {
   background:
-    radial-gradient(900px 500px at 12% -10%, rgba(63,81,181,.28), transparent 60%),
-    radial-gradient(700px 400px at 95% 5%,   rgba(233,30,99,.20), transparent 60%),
-    radial-gradient(600px 500px at 50% 110%, rgba(255,193,7,.22), transparent 60%),
-    linear-gradient(180deg, #f5f7ff 0%, #fff5f8 100%);
+    radial-gradient(900px 500px at 12% -10%, rgba(25,118,210,.22), transparent 60%),
+    radial-gradient(700px 400px at 95% 5%,   rgba(63,81,181,.16), transparent 60%),
+    radial-gradient(600px 500px at 50% 110%, rgba(156,39,176,.12), transparent 60%),
+    linear-gradient(180deg, #f5f8ff 0%, #f7f6fb 100%);
 }
 .gradient-rainbow {
-  background: linear-gradient(120deg, #3f51b5, #673ab7 25%, #e91e63 50%, #ff5722 75%, #ffc107);
+  background: linear-gradient(120deg, #1976d2 0%, #3f51b5 50%, #7b1fa2 100%);
 }
 .gradient-mint {
-  background: linear-gradient(135deg, #00bfa5 0%, #009688 100%);
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
 }
 .gradient-sunset {
-  background: linear-gradient(135deg, #ff7043 0%, #f06292 60%, #ab47bc 100%);
+  background: linear-gradient(135deg, #1565c0 0%, #303f9f 50%, #6a1b9a 100%);
 }
 .glass {
-  background: rgba(255,255,255,.78);
+  background: rgba(255,255,255,.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 .text-gradient {
-  background: linear-gradient(90deg, #3f51b5 0%, #673ab7 40%, #e91e63 80%);
+  background: linear-gradient(90deg, #1976d2 0%, #3f51b5 50%, #7b1fa2 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .blob {

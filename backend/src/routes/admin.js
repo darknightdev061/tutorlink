@@ -149,6 +149,24 @@ router.get('/site/content/:id', async (req, res) => {
   res.json({ data: data?.data || {}, updated_at: data?.updated_at });
 });
 
+// Admin can update or delete any booking (request) — used by Bookings tab
+router.patch('/requests/:id', async (req, res) => {
+  const allowed = ['pending', 'accepted', 'declined', 'completed', 'cancelled'];
+  const { status } = req.body || {};
+  if (!allowed.includes(status)) return res.status(400).json({ error: `status must be one of ${allowed.join(', ')}` });
+  const { data, error } = await supabaseAdmin
+    .from('requests').update({ status, updated_at: new Date().toISOString() })
+    .eq('id', req.params.id).select().single();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ request: data });
+});
+
+router.delete('/requests/:id', async (req, res) => {
+  const { error } = await supabaseAdmin.from('requests').delete().eq('id', req.params.id);
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 // Public enquiries collected from the landing page (no-login contact form)
 router.get('/public-enquiries', async (req, res) => {
   const status = req.query.status;

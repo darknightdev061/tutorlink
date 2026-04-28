@@ -433,7 +433,7 @@ function UserRow({ u, onToggle, onDelete }) {
   );
 }
 
-/* ------------------------- ENQUIRIES ------------------------- */
+/* ------------------------- BOOKINGS (logged-in student requests) ------------------------- */
 function Enquiries() {
   const [list, setList] = useState([]);
   const [filter, setFilter] = useState('pending');
@@ -450,8 +450,20 @@ function Enquiries() {
   };
   useEffect(() => { load(); }, [filter]);
 
+  const setStatus = async (id, status) => {
+    try { await api.patch(`/api/admin/requests/${id}`, { status });
+      toast.success(`Marked ${status}`); load(); }
+    catch (e) { toast.error(e.message); }
+  };
+  const remove = async (id) => {
+    if (!confirm('Delete this booking? This cannot be undone.')) return;
+    try { await api.del(`/api/admin/requests/${id}`); toast.success('Deleted'); load(); }
+    catch (e) { toast.error(e.message); }
+  };
+
   return (
     <div>
+      <p className="text-slate-600 mb-4">Booking requests from logged-in students to tutors. Use the action buttons to confirm, decline, complete or cancel.</p>
       <div className="flex gap-2 mb-5 flex-wrap">
         {['pending','accepted','declined','cancelled','completed',''].map(f => (
           <button key={f} onClick={() => setFilter(f)}
@@ -463,42 +475,59 @@ function Enquiries() {
       </div>
 
       {busy && <div className="text-slate-500">Loading…</div>}
-      {err && <div className="card-fun p-5 text-sm text-slate-600">
-        <div className="font-bold text-red-600 mb-1">Could not load enquiries</div>
-        {err}. The endpoint may need to be deployed. Once the latest backend is live, this list will populate automatically.
+      {err && <div className="card-fun p-5 text-sm text-slate-600 bg-red-50 border-red-200">
+        <div className="font-bold text-red-700 mb-1">Could not load bookings</div>{err}
       </div>}
 
       <div className="space-y-3">
-        {!busy && !err && list.length === 0 && <div className="text-slate-500">No enquiries in this category.</div>}
-        {list.map(r => (
-          <div key={r.id} className="card-fun p-5">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-1 min-w-[260px]">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold">{r.student?.full_name || r.student?.email || 'Student'}</span>
-                  <span className="text-slate-400">→</span>
-                  <span className="font-bold text-brand-700">{r.tutor?.full_name || r.tutor?.email || 'Tutor'}</span>
+        {!busy && !err && list.length === 0 && <div className="text-slate-500">No bookings in this category.</div>}
+        {list.map(r => {
+          const stu = r.student || {};
+          const tut = r.tutor || {};
+          const phone = stu.phone || stu.guardian_phone;
+          return (
+            <div key={r.id} className="card-fun p-5">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-1 min-w-[260px]">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold">{stu.full_name || stu.email || 'Student'}</span>
+                    <span className="text-slate-400">→</span>
+                    <span className="font-bold text-brand-700">{tut.full_name || tut.email || 'Tutor'}</span>
+                    <span className={`pill capitalize
+                      ${r.status === 'pending'   ? 'bg-sunny-100 text-sunny-800'
+                      : r.status === 'accepted'  ? 'bg-mint-100 text-mint-700'
+                      : r.status === 'declined'  ? 'bg-red-100 text-red-700'
+                      : r.status === 'cancelled' ? 'bg-slate-200 text-slate-700'
+                                                 : 'bg-brand-100 text-brand-700'}`}>{r.status}</span>
+                  </div>
+                  <div className="text-sm text-slate-600 mt-1">
+                    <b>{r.subject || 'General'}</b> · {r.duration_minutes || 60} min
+                    {r.preferred_date && <> · {new Date(r.preferred_date).toLocaleString('en-IN')}</>}
+                  </div>
+                  {r.message && <p className="text-sm text-slate-600 mt-2 bg-slate-50 rounded-lg p-3 italic">"{r.message}"</p>}
+                  <div className="text-xs text-slate-500 mt-2 flex flex-wrap gap-3">
+                    {stu.email && <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3" />{stu.email}</span>}
+                    {phone     && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" />{phone}</span>}
+                    {stu.city  && <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{stu.city}</span>}
+                    {stu.grade_level && <span><b>Class:</b> {stu.grade_level}</span>}
+                    <span>Sent {new Date(r.created_at).toLocaleDateString('en-IN')}</span>
+                  </div>
                 </div>
-                <div className="text-sm text-slate-600 mt-1">
-                  <b>{r.subject || 'General'}</b> · {r.mode || 'online'} · {r.duration_minutes || 60} min
-                </div>
-                {r.message && <p className="text-sm text-slate-600 mt-2 bg-slate-50 rounded-lg p-3">"{r.message}"</p>}
-                <div className="text-xs text-slate-500 mt-2 flex flex-wrap gap-3">
-                  {r.student?.phone && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" />{r.student.phone}</span>}
-                  {r.student?.email && <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3" />{r.student.email}</span>}
-                  {r.student?.city && <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{r.student.city}</span>}
-                  <span>Sent {new Date(r.created_at).toLocaleDateString('en-IN')}</span>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-1.5">
+                  {phone && <a href={`https://wa.me/${phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn-mint py-1.5 px-3 text-xs"><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</a>}
+                  {phone && <a href={`tel:${phone}`} className="btn-outline py-1.5 px-3 text-xs"><Phone className="w-3.5 h-3.5" /> Call</a>}
+                  {r.status !== 'accepted'  && <button onClick={() => setStatus(r.id, 'accepted')}  className="btn-primary py-1.5 px-3 text-xs"><Check className="w-3.5 h-3.5" /> Accept</button>}
+                  {r.status !== 'declined' && r.status !== 'cancelled' && <button onClick={() => setStatus(r.id, 'declined')} className="btn-ghost py-1.5 px-3 text-xs text-red-600"><X className="w-3.5 h-3.5" /> Decline</button>}
+                  {r.status === 'accepted' && <button onClick={() => setStatus(r.id, 'completed')} className="btn-ghost py-1.5 px-3 text-xs text-mint-700"><CheckCircle2 className="w-3.5 h-3.5" /> Mark completed</button>}
+                  {r.status !== 'cancelled' && r.status !== 'completed' && <button onClick={() => setStatus(r.id, 'cancelled')} className="btn-ghost py-1.5 px-3 text-xs text-slate-500">Cancel</button>}
+                  <button onClick={() => remove(r.id)} className="btn-ghost py-1.5 px-3 text-xs text-red-600"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
                 </div>
               </div>
-              <span className={`badge capitalize
-                ${r.status === 'pending'   ? 'bg-sunny-100 text-sunny-800'
-                : r.status === 'accepted'  ? 'bg-mint-100 text-mint-700'
-                : r.status === 'declined'  ? 'bg-red-100 text-red-700'
-                : r.status === 'cancelled' ? 'bg-slate-200 text-slate-700'
-                                           : 'bg-brand-100 text-brand-700'}`}>{r.status}</span>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

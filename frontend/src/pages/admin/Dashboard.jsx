@@ -7,7 +7,7 @@ import {
   Users, GraduationCap, Clock, CheckCircle2, Inbox, Activity, Search,
   Check, X, ChevronDown, ChevronUp, Trash2, Power, UserPlus, BarChart3,
   MessageSquare, IndianRupee, Mail, Phone, MapPin, RefreshCw,
-  FileText, Save, Plus, Trash, Settings
+  FileText, Save, Plus, Trash, Settings, LogOut
 } from 'lucide-react';
 
 const TABS = [
@@ -81,9 +81,14 @@ export default function AdminDashboard() {
             {' '}· role: <span className={`pill ${role === 'admin' ? 'bg-mint-100 text-mint-700' : 'bg-red-100 text-red-700'}`}>{role || 'unknown'}</span>
           </p>
         </div>
-        <button onClick={refreshStats} className="btn-outline">
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
+        <div className="flex gap-2">
+          <button onClick={refreshStats} className="btn-outline">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button onClick={async () => { await signOut(); window.location.href = '/'; }} className="btn-ghost">
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </div>
       </div>
 
       {statsErr && (

@@ -1,16 +1,9 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { GraduationCap, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Link, NavLink } from 'react-router-dom';
+import { GraduationCap, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { session, profile, signOut } = useAuth();
-  const nav = useNavigate();
   const [open, setOpen] = useState(false);
-
-  const dashHref = profile?.role === 'admin'  ? '/admin'
-                 : profile?.role === 'tutor'  ? '/tutor'
-                 : '/student';
 
   const links = [
     { to: '/', label: 'Home' },
@@ -38,36 +31,18 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="flex-1" />
-        <div className="hidden md:flex items-center gap-2">
-          {session && (
-            <>
-              <Link to={dashHref} className="btn-outline">
-                <LayoutDashboard className="w-4 h-4" /> Dashboard
-              </Link>
-              <button onClick={async () => { await signOut(); nav('/'); }} className="btn-ghost">
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
-            </>
-          )}
-        </div>
-        <button onClick={() => setOpen(o => !o)} className="md:hidden p-2 rounded-md hover:bg-slate-100">
+        <button onClick={() => setOpen(o => !o)} className="lg:hidden p-2 rounded-md hover:bg-slate-100">
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
       {open && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1">
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1">
           {links.map(l => (
             <NavLink key={l.to} to={l.to} onClick={() => setOpen(false)}
               className="block px-3 py-2 rounded-md text-slate-700 hover:bg-slate-100">
               {l.label}
             </NavLink>
           ))}
-          {session && (
-            <div className="border-t pt-2 mt-2 flex gap-2">
-              <Link onClick={() => setOpen(false)} to={dashHref} className="btn-outline flex-1">Dashboard</Link>
-              <button onClick={async () => { setOpen(false); await signOut(); nav('/'); }} className="btn-ghost">Logout</button>
-            </div>
-          )}
         </div>
       )}
     </header>

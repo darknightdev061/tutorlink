@@ -17,14 +17,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      if (data.session) await loadProfile();
-      setLoading(false);
+      setLoading(false);                          // unblock UI immediately
+      if (data.session) loadProfile().catch(()=>{}); // fetch profile in background
     });
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      if (s) await loadProfile(); else setProfile(null);
+      if (s) loadProfile().catch(()=>{}); else setProfile(null);
     });
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);

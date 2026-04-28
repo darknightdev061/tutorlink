@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { LogIn, GraduationCap } from 'lucide-react';
 
 export default function Login() {
-  const { signIn, refresh } = useAuth();
+  const { signIn } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
@@ -16,20 +16,21 @@ export default function Login() {
     setBusy(true);
     try {
       await signIn(form);
-      try { await refresh?.(); } catch {}
-      try {
-        const { user } = await api.get('/api/auth/me');
-        toast.success(`Welcome, ${user?.full_name || user?.email}!`);
-        const dest = user?.role === 'admin' ? '/admin'
-                   : user?.role === 'tutor' ? '/tutor'
-                   : '/student';
-        nav(dest, { replace: true });
-      } catch {
-        toast.success('Welcome back!');
-        nav('/', { replace: true });
-      }
-    } catch (err) { toast.error(err.message); }
-    finally { setBusy(false); }
+      // Read role straight from Supabase user metadata — no extra /api round-trip,
+      // so we never collide with the AuthContext's own profile-fetch lock.
+      const { data: { user } } = await supabase.auth.getUser();
+      const role = user?.user_metadata?.role;
+      const dest = role === 'admin' ? '/admin'
+                 : role === 'tutor' ? '/tutor'
+                 : role === 'student' ? '/student'
+                 : '/admin'; // default to admin (verified by ProtectedRoute)
+      toast.success(`Welcome, ${user?.user_metadata?.full_name || user?.email}!`);
+      nav(dest, { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Sign in failed');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -38,12 +39,12 @@ export default function Login() {
         <div className="text-center mb-6">
           <GraduationCap className="w-10 h-10 mx-auto text-brand-600" />
           <h1 className="text-2xl font-bold mt-2">Welcome back</h1>
-          <p className="text-sm text-slate-500">Log in to continue learning.</p>
+          <p className="text-sm text-slate-500">Log in to continue.</p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="label">Email</label>
-            <input className="input" type="email" required
+            <input className="input" type="email" required autoFocus
               value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
           </div>
           <div>

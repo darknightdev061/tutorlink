@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import EnquiryModal from '../components/EnquiryModal';
 import {
   Search, MapPin, BookOpen, ShieldCheck, Star, Users, Calendar,
   MessageSquare, Wallet, Award, Sparkles, ArrowRight, CheckCircle2,
@@ -332,6 +333,11 @@ export default function Landing() {
   const cmsHourly  = cms?.hourly_starts_at;
   const cmsContact = cms?.contact;
 
+  // Public no-login enquiry modal
+  const [enquiry, setEnquiry] = useState({ open: false, type: 'student', source: 'landing' });
+  const openStudentForm = (source = 'cta') => setEnquiry({ open: true, type: 'student', source });
+  const openTutorForm   = (source = 'become_tutor') => setEnquiry({ open: true, type: 'tutor', source });
+
   return (
     <div className="overflow-x-hidden">
       {/* ANNOUNCEMENT BAR */}
@@ -369,12 +375,12 @@ export default function Landing() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/signup" className="btn-primary text-base px-6 py-3.5">
+              <button onClick={() => openStudentForm('hero_primary')} className="btn-primary text-base px-6 py-3.5">
                 <Rocket className="w-4 h-4" /> {cmsHero?.cta_primary || 'Start free — book a demo'}
-              </Link>
-              <Link to="/find-tutors" className="btn-outline text-base px-6 py-3.5">
+              </button>
+              <button onClick={() => openStudentForm('hero_browse')} className="btn-outline text-base px-6 py-3.5">
                 <Search className="w-4 h-4" /> {cmsHero?.cta_secondary || 'Browse 3,400+ tutors'}
-              </Link>
+              </button>
             </div>
 
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl">
@@ -516,9 +522,9 @@ export default function Landing() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/signup" className="mt-5 inline-flex items-center gap-1.5 font-bold text-brand-700 hover:text-brand-800 group/link">
+                  <button onClick={() => openStudentForm(`age_${g.range.replace(/\s+/g,'_')}`)} className="mt-5 inline-flex items-center gap-1.5 font-bold text-brand-700 hover:text-brand-800 group/link">
                     Find a tutor for {g.range} <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
@@ -609,7 +615,7 @@ export default function Landing() {
               <span className="badge bg-grape-100 text-grape-700 mb-3"><GraduationCap className="w-3.5 h-3.5" /> Meet a few of our stars</span>
               <h2 className="h-display text-3xl md:text-4xl font-bold">Top-rated tutors — <span className="text-gradient">all over India</span></h2>
             </div>
-            <Link to="/find-tutors" className="btn-primary">Browse all <ArrowRight className="w-4 h-4" /></Link>
+            <button onClick={() => openStudentForm('tutor_section')} className="btn-primary">Talk to us <ArrowRight className="w-4 h-4" /></button>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -633,7 +639,7 @@ export default function Landing() {
                     <span className="font-extrabold text-brand-700 flex items-center text-lg">
                       <IndianRupee className="w-4 h-4" />{t.price}<span className="text-xs text-slate-500 font-semibold ml-1">/hr</span>
                     </span>
-                    <button className="btn-primary py-2 px-4 text-sm">Book demo</button>
+                    <button onClick={() => openStudentForm(`tutor_${t.name}`)} className="btn-primary py-2 px-4 text-sm">Book demo</button>
                   </div>
                 </div>
               </div>
@@ -710,7 +716,7 @@ export default function Landing() {
                   <span className="text-5xl font-extrabold text-slate-900">{Number(p.price).toLocaleString('en-IN')}</span>
                   <span className="text-slate-500">/ {p.per}</span>
                 </div>
-                <Link to="/signup" className={`${fb.btn} w-full mt-5 justify-center`}>Choose {p.name}</Link>
+                <button onClick={() => openStudentForm(`plan_${p.name}`)} className={`${fb.btn} w-full mt-5 justify-center`}>Choose {p.name}</button>
                 <ul className="mt-6 space-y-2.5">
                   {(p.features || []).map((f,i) => (
                     <li key={i} className="flex gap-2 text-sm text-slate-700">
@@ -814,7 +820,7 @@ export default function Landing() {
                 <li key={i} className="flex gap-2 text-slate-700"><CheckCircle2 className="w-5 h-5 text-mint-500 flex-shrink-0" /> {x}</li>
               ))}
             </ul>
-            <Link to="/become-tutor" className="btn-primary mt-7">Become a tutor — apply free <ArrowRight className="w-4 h-4" /></Link>
+            <button onClick={() => openTutorForm('become_tutor_section')} className="btn-primary mt-7">Become a tutor — apply free <ArrowRight className="w-4 h-4" /></button>
           </div>
           <div className="relative min-h-[320px]">
             <img onError={onImgErr} src={IMG.classroom} className="absolute inset-0 w-full h-full object-cover" alt="Tutor" loading="lazy" />
@@ -854,12 +860,12 @@ export default function Landing() {
             <h2 className="h-display text-3xl md:text-5xl font-bold">Your child's <span className="kid-underline text-slate-900">aha! moment</span> is just one click away</h2>
             <p className="text-white/90 mt-4 max-w-2xl mx-auto text-lg">Join 12,000+ Indian families. First demo class is on us — no card, no commitment, no awkward sales call.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link to="/signup" className="btn bg-white text-candy-700 hover:bg-slate-100 px-7 py-3.5 text-base">
+              <button onClick={() => openStudentForm('final_cta')} className="btn bg-white text-candy-700 hover:bg-slate-100 px-7 py-3.5 text-base">
                 <Smile className="w-4 h-4" /> Get my child a tutor
-              </Link>
-              <Link to="/become-tutor" className="btn border-2 border-white/60 text-white hover:bg-white/10 px-7 py-3.5 text-base">
+              </button>
+              <button onClick={() => openTutorForm('final_cta')} className="btn border-2 border-white/60 text-white hover:bg-white/10 px-7 py-3.5 text-base">
                 <GraduationCap className="w-4 h-4" /> I want to teach
-              </Link>
+              </button>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-white/85">
               <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> 100% free signup</div>
@@ -869,6 +875,14 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Public no-login enquiry modal — opens from every CTA */}
+      <EnquiryModal
+        open={enquiry.open}
+        type={enquiry.type}
+        source={enquiry.source}
+        onClose={() => setEnquiry(s => ({ ...s, open: false }))}
+      />
     </div>
   );
 }

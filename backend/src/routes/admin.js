@@ -149,6 +149,36 @@ router.get('/site/content/:id', async (req, res) => {
   res.json({ data: data?.data || {}, updated_at: data?.updated_at });
 });
 
+// Public enquiries collected from the landing page (no-login contact form)
+router.get('/public-enquiries', async (req, res) => {
+  const status = req.query.status;
+  let q = supabaseAdmin.from('public_enquiries').select('*').order('created_at', { ascending: false });
+  if (status) q = q.eq('status', status);
+  const { data, error } = await q;
+  if (error) {
+    if (/does not exist|schema cache/i.test(error.message)) return res.json({ enquiries: [] });
+    return res.status(400).json({ error: error.message });
+  }
+  res.json({ enquiries: data });
+});
+
+router.patch('/public-enquiries/:id', async (req, res) => {
+  const allowed = ['new', 'contacted', 'converted', 'junk'];
+  const { status } = req.body || {};
+  if (!allowed.includes(status)) return res.status(400).json({ error: `status must be one of ${allowed.join(', ')}` });
+  const { data, error } = await supabaseAdmin
+    .from('public_enquiries').update({ status, updated_at: new Date().toISOString() })
+    .eq('id', req.params.id).select().single();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ enquiry: data });
+});
+
+router.delete('/public-enquiries/:id', async (req, res) => {
+  const { error } = await supabaseAdmin.from('public_enquiries').delete().eq('id', req.params.id);
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 router.patch('/site/content/:id', async (req, res) => {
   const id = req.params.id || 'landing';
   const { data: incoming } = req.body || {};

@@ -11,13 +11,14 @@ import {
 } from 'lucide-react';
 
 const TABS = [
-  { id: 'overview',  label: 'Overview',          icon: BarChart3 },
-  { id: 'tutors',    label: 'Tutor Applications',icon: GraduationCap },
-  { id: 'students',  label: 'Students',          icon: Users },
-  { id: 'enquiries', label: 'Enquiries',         icon: MessageSquare },
-  { id: 'leads',     label: 'Leads',             icon: Inbox },
-  { id: 'register',  label: 'Register Student',  icon: UserPlus },
-  { id: 'content',   label: 'Site Content',      icon: FileText }
+  { id: 'overview',         label: 'Overview',           icon: BarChart3 },
+  { id: 'public_enquiries', label: 'Contact Form Leads', icon: MessageSquare },
+  { id: 'tutors',           label: 'Tutor Applications', icon: GraduationCap },
+  { id: 'students',         label: 'Students',           icon: Users },
+  { id: 'enquiries',        label: 'Bookings',           icon: Inbox },
+  { id: 'leads',            label: 'Inactive Students',  icon: Inbox },
+  { id: 'register',         label: 'Register Student',   icon: UserPlus },
+  { id: 'content',          label: 'Site Content',       icon: FileText }
 ];
 
 export default function AdminDashboard() {
@@ -111,13 +112,14 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {tab === 'overview'  && <Overview stats={stats} setTab={setTab} />}
-      {tab === 'tutors'    && <TutorApplications onChange={refreshStats} />}
-      {tab === 'students'  && <UsersTab role="student" onChange={refreshStats} />}
-      {tab === 'enquiries' && <Enquiries />}
-      {tab === 'leads'     && <Leads />}
-      {tab === 'register'  && <RegisterStudent onCreated={() => { refreshStats(); setTab('students'); }} />}
-      {tab === 'content'   && <SiteContent />}
+      {tab === 'overview'         && <Overview stats={stats} setTab={setTab} />}
+      {tab === 'public_enquiries' && <PublicEnquiries />}
+      {tab === 'tutors'           && <TutorApplications onChange={refreshStats} />}
+      {tab === 'students'         && <UsersTab role="student" onChange={refreshStats} />}
+      {tab === 'enquiries'        && <Enquiries />}
+      {tab === 'leads'            && <Leads />}
+      {tab === 'register'         && <RegisterStudent onCreated={() => { refreshStats(); setTab('students'); }} />}
+      {tab === 'content'          && <SiteContent />}
     </div>
   );
 }
@@ -489,6 +491,105 @@ function Enquiries() {
                 : r.status === 'declined'  ? 'bg-red-100 text-red-700'
                 : r.status === 'cancelled' ? 'bg-slate-200 text-slate-700'
                                            : 'bg-brand-100 text-brand-700'}`}>{r.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------- PUBLIC ENQUIRIES (no-login contact form) ------------------------- */
+function PublicEnquiries() {
+  const [list, setList] = useState([]);
+  const [filter, setFilter] = useState('new');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const load = async () => {
+    setBusy(true); setErr('');
+    try {
+      const qs = filter ? `?status=${filter}` : '';
+      const r = await api.get(`/api/admin/public-enquiries${qs}`);
+      setList(r.enquiries || []);
+    } catch (e) { setErr(e.message); setList([]); }
+    finally { setBusy(false); }
+  };
+  useEffect(() => { load(); }, [filter]);
+
+  const setStatus = async (id, status) => {
+    try { await api.patch(`/api/admin/public-enquiries/${id}`, { status });
+      toast.success(status); load(); }
+    catch (e) { toast.error(e.message); }
+  };
+  const remove = async (id) => {
+    if (!confirm('Delete this enquiry?')) return;
+    try { await api.del(`/api/admin/public-enquiries/${id}`); toast.success('Deleted'); load(); }
+    catch (e) { toast.error(e.message); }
+  };
+
+  return (
+    <div>
+      <p className="text-slate-600 mb-4">Leads from the public contact form (no login required). Mark as <b>contacted</b> after you call them, <b>converted</b> when they sign up, or <b>junk</b> for spam.</p>
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {['new','contacted','converted','junk',''].map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            className={`px-3.5 py-1.5 rounded-full text-sm capitalize font-semibold border-2
+              ${filter === f ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 hover:border-brand-400'}`}>
+            {f || 'all'}
+          </button>
+        ))}
+      </div>
+
+      {busy && <div className="text-slate-500">Loading…</div>}
+      {err && <div className="card-fun p-5 text-sm text-slate-600 bg-red-50 border-red-200">
+        <div className="font-bold text-red-700">Could not load</div>{err}
+      </div>}
+      {!busy && !err && list.length === 0 && <div className="text-slate-500">No enquiries in this category.</div>}
+
+      <div className="space-y-3">
+        {list.map(e => (
+          <div key={e.id} className="card-fun p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-[260px]">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-lg">{e.full_name}</span>
+                  <span className={`pill capitalize ${e.type === 'tutor' ? 'bg-candy-100 text-candy-700' : 'bg-brand-100 text-brand-700'}`}>{e.type === 'tutor' ? 'Wants to teach' : 'Wants a tutor'}</span>
+                  <span className={`pill capitalize
+                    ${e.status === 'new'        ? 'bg-sunny-100 text-sunny-800'
+                    : e.status === 'contacted'  ? 'bg-brand-100 text-brand-700'
+                    : e.status === 'converted'  ? 'bg-mint-100 text-mint-700'
+                    :                              'bg-slate-200 text-slate-700'}`}>{e.status}</span>
+                </div>
+
+                <div className="mt-2 grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  {e.phone       && <div className="inline-flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-slate-400" /> <a href={`tel:${e.phone}`} className="hover:text-brand-700">{e.phone}</a></div>}
+                  {e.email       && <div className="inline-flex items-center gap-1"><Mail  className="w-3.5 h-3.5 text-slate-400" /> <a href={`mailto:${e.email}`} className="hover:text-brand-700">{e.email}</a></div>}
+                  {e.city        && <div className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-400" /> {e.city}</div>}
+                  {e.grade_level && <div><b>Class:</b> {e.grade_level}</div>}
+                </div>
+
+                {e.subjects?.length > 0 && (
+                  <div className="mt-2 text-sm">
+                    <b>Subjects:</b> {e.subjects.map((s,i) => <span key={i} className="chip mr-1.5">{s}</span>)}
+                  </div>
+                )}
+
+                {e.message && <p className="text-sm text-slate-600 mt-2 bg-slate-50 rounded-lg p-3 italic">"{e.message}"</p>}
+
+                <div className="text-xs text-slate-400 mt-2">
+                  Source: {e.source || '—'} · Submitted {new Date(e.created_at).toLocaleString('en-IN')}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                {e.phone && <a href={`https://wa.me/${e.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn-mint py-1.5 px-3 text-xs"><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</a>}
+                {e.phone && <a href={`tel:${e.phone}`} className="btn-outline py-1.5 px-3 text-xs"><Phone className="w-3.5 h-3.5" /> Call</a>}
+                {e.status !== 'contacted' && <button onClick={() => setStatus(e.id, 'contacted')} className="btn-ghost py-1.5 px-3 text-xs">Mark contacted</button>}
+                {e.status !== 'converted' && <button onClick={() => setStatus(e.id, 'converted')} className="btn-ghost py-1.5 px-3 text-xs text-mint-700">Mark converted</button>}
+                {e.status !== 'junk'      && <button onClick={() => setStatus(e.id, 'junk')}      className="btn-ghost py-1.5 px-3 text-xs text-slate-500">Mark junk</button>}
+                <button onClick={() => remove(e.id)} className="btn-ghost py-1.5 px-3 text-xs text-red-600"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
+              </div>
             </div>
           </div>
         ))}

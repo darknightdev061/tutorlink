@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
   Users, GraduationCap, Clock, CheckCircle2, Inbox, Activity, Search,
@@ -19,11 +21,42 @@ const TABS = [
 ];
 
 export default function AdminDashboard() {
+  const { profile, signOut } = useAuth();
   const [tab, setTab] = useState('overview');
   const [stats, setStats] = useState({});
+  const [statsErr, setStatsErr] = useState('');
+  const [me, setMe] = useState(null);
 
-  const refreshStats = () => api.get('/api/admin/stats').then(r => setStats(r.stats || {})).catch(()=>{});
-  useEffect(() => { refreshStats(); }, []);
+  const refreshStats = async () => {
+    setStatsErr('');
+    try {
+      const r = await api.get('/api/admin/stats');
+      setStats(r.stats || {});
+    } catch (e) {
+      setStatsErr(e.message);
+      toast.error('Stats: ' + e.message);
+    }
+  };
+
+  useEffect(() => {
+    // Confirm we're signed in as admin and force-refresh the auth/me round trip
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { setStatsErr('No active session — please log in again.'); return; }
+        const { user } = await api.get('/api/auth/me');
+        setMe(user);
+        if (user?.role !== 'admin') {
+          setStatsErr(`Logged in as ${user?.role || 'unknown'} — admin access required.`);
+          return;
+        }
+        await refreshStats();
+      } catch (e) { setStatsErr(e.message); }
+    })();
+  }, []);
+
+  const role = me?.role || profile?.role;
+  const email = me?.email || profile?.email;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -31,11 +64,27 @@ export default function AdminDashboard() {
         <div>
           <h1 className="h-display text-3xl md:text-4xl font-bold">Admin panel</h1>
           <p className="text-slate-600">Manage tutors, students, enquiries and leads — all in one place.</p>
+          <p className="text-xs text-slate-400 mt-1">
+            Signed in as <b className="text-slate-700">{email || '—'}</b>
+            {' '}· role: <span className={`pill ${role === 'admin' ? 'bg-mint-100 text-mint-700' : 'bg-red-100 text-red-700'}`}>{role || 'unknown'}</span>
+          </p>
         </div>
         <button onClick={refreshStats} className="btn-outline">
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
       </div>
+
+      {statsErr && (
+        <div className="card-fun p-4 mb-5 bg-red-50 border-red-200">
+          <div className="font-bold text-red-700">Could not load admin data</div>
+          <p className="text-sm text-slate-700 mt-1">{statsErr}</p>
+          {role && role !== 'admin' && (
+            <button onClick={async () => { await signOut(); window.location.href = '/login'; }} className="btn-danger mt-3 py-2 text-sm">
+              Sign out and log in as admin
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Tab bar */}
       <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-2">

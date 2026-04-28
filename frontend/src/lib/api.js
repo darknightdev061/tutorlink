@@ -1,6 +1,18 @@
 import { supabase } from './supabase';
 
-const BASE = import.meta.env.VITE_API_URL || '';
+// Resolve API base. If the env var points at localhost but we're running on a
+// deployed origin, ignore it and use relative paths (Vercel routes /api/* to
+// the backend function automatically).
+function resolveBase() {
+  const env = import.meta.env.VITE_API_URL || '';
+  if (typeof window !== 'undefined') {
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(env);
+    const onLocalhost = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+    if (isLocalhost && !onLocalhost) return '';
+  }
+  return env;
+}
+const BASE = resolveBase();
 
 async function request(path, opts = {}) {
   const { data: { session } } = await supabase.auth.getSession();

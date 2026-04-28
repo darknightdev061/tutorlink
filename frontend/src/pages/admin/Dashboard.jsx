@@ -342,6 +342,12 @@ function UsersTab({ role: initialRole, onChange }) {
 function UserRow({ u, onToggle, onDelete }) {
   const isStudent = u.role === 'student';
   const isTutor   = u.role === 'tutor';
+  const [showAddr, setShowAddr] = useState(false);
+  const [showGuardian, setShowGuardian] = useState(false);
+
+  const hasAddress  = isStudent && u.student && (u.student.address_line1 || u.student.address_line2 || u.student.city || u.student.state || u.student.zip_code);
+  const hasGuardian = isStudent && u.student && (u.student.guardian_name || u.student.guardian_phone || u.student.alternate_phone || u.student.guardian_email);
+
   return (
     <div className="card-fun p-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -374,8 +380,25 @@ function UserRow({ u, onToggle, onDelete }) {
                 )}
               </div>
 
-              {(u.student.address_line1 || u.student.city || u.student.state) && (
-                <div className="bg-slate-50 rounded-xl p-3">
+              <div className="flex flex-wrap gap-2 pt-1">
+                {hasAddress && (
+                  <button type="button" onClick={() => setShowAddr(s => !s)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-slate-200 hover:border-brand-400 bg-white text-xs font-semibold text-slate-700 hover:text-brand-700 transition">
+                    <MapPin className="w-3.5 h-3.5" /> Address
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAddr ? 'rotate-180' : ''}`} />
+                  </button>
+                )}
+                {hasGuardian && (
+                  <button type="button" onClick={() => setShowGuardian(s => !s)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-slate-200 hover:border-brand-400 bg-white text-xs font-semibold text-slate-700 hover:text-brand-700 transition">
+                    <Users className="w-3.5 h-3.5" /> Guardian details
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showGuardian ? 'rotate-180' : ''}`} />
+                  </button>
+                )}
+              </div>
+
+              {showAddr && hasAddress && (
+                <div className="bg-slate-50 rounded-xl p-3 animate-fade-in">
                   <div className="font-bold text-slate-700 text-xs uppercase tracking-wide mb-1 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> Address</div>
                   <div className="text-slate-700">
                     {[u.student.address_line1, u.student.address_line2].filter(Boolean).join(', ')}
@@ -385,8 +408,8 @@ function UserRow({ u, onToggle, onDelete }) {
                 </div>
               )}
 
-              {(u.student.guardian_name || u.student.guardian_phone || u.student.alternate_phone || u.student.guardian_email) && (
-                <div className="bg-brand-50/60 rounded-xl p-3">
+              {showGuardian && hasGuardian && (
+                <div className="bg-brand-50/60 rounded-xl p-3 animate-fade-in">
                   <div className="font-bold text-brand-700 text-xs uppercase tracking-wide mb-1">Guardian / contact</div>
                   <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-slate-700">
                     {u.student.guardian_name     && <div><b>{u.student.guardian_relation || 'Guardian'}:</b> {u.student.guardian_name}</div>}

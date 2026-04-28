@@ -76,6 +76,64 @@ router.patch('/users/:id/active', async (req, res) => {
   res.json({ user: data });
 });
 
+// Generic edit — admin can update name, email and (for students) every profile
+// field EXCEPT roll_number (which is set at registration and immutable).
+router.patch('/users/:id', async (req, res) => {
+  const id = req.params.id;
+  const b = req.body || {};
+
+  // 1. Look up role so we know which profile table to touch
+  const { data: u, error: ue } = await supabaseAdmin
+    .from('users').select('id, role').eq('id', id).maybeSingle();
+  if (ue) return res.status(400).json({ error: ue.message });
+  if (!u) return res.status(404).json({ error: 'User not found' });
+
+  // 2. Update users table (full_name + email if provided)
+  const userPatch = {};
+  if (typeof b.full_name === 'string') userPatch.full_name = b.full_name;
+  if (typeof b.email === 'string')     userPatch.email     = b.email;
+  if (Object.keys(userPatch).length) {
+    const { error } = await supabaseAdmin.from('users').update(userPatch).eq('id', id);
+    if (error) return res.status(400).json({ error: error.message });
+    if (b.email) {
+      // Keep auth.users in sync so login still works
+      await supabaseAdmin.auth.admin.updateUserById(id, { email: b.email, email_confirm: true }).catch(() => {});
+    }
+  }
+
+  // 3. Update role-specific profile (skip roll_number — read-only)
+  if (u.role === 'student') {
+    const studentFields = [
+      'grade_level', 'preferred_subjects',
+      'address_line1', 'address_line2', 'city', 'state', 'zip_code',
+      'guardian_name', 'guardian_relation', 'guardian_phone', 'guardian_email', 'alternate_phone'
+    ];
+    const sp = { user_id: id };
+    let hasField = false;
+    for (const f of studentFields) {
+      if (Object.prototype.hasOwnProperty.call(b, f)) { sp[f] = b[f]; hasField = true; }
+    }
+    if (hasField) {
+      const { error } = await supabaseAdmin.from('student_profiles').upsert(sp, { onConflict: 'user_id' });
+      if (error) return res.status(400).json({ error: error.message });
+    }
+  }
+  if (u.role === 'tutor') {
+    const tutorFields = ['subjects', 'qualifications', 'bio', 'hourly_rate', 'experience_years', 'languages', 'service_radius_km', 'city', 'zip_code'];
+    const tp = { user_id: id };
+    let hasField = false;
+    for (const f of tutorFields) {
+      if (Object.prototype.hasOwnProperty.call(b, f)) { tp[f] = b[f]; hasField = true; }
+    }
+    if (hasField) {
+      const { error } = await supabaseAdmin.from('tutor_profiles').upsert(tp, { onConflict: 'user_id' });
+      if (error) return res.status(400).json({ error: error.message });
+    }
+  }
+
+  res.json({ ok: true });
+});
+
 router.delete('/users/:id', async (req, res) => {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(req.params.id);
   if (error) return res.status(400).json({ error: error.message });

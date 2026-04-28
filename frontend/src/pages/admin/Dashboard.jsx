@@ -7,7 +7,7 @@ import {
   Users, GraduationCap, Clock, CheckCircle2, Inbox, Activity, Search,
   Check, X, ChevronDown, ChevronUp, Trash2, Power, UserPlus, BarChart3,
   MessageSquare, IndianRupee, Mail, Phone, MapPin, RefreshCw,
-  FileText, Save, Plus, Trash, Settings, LogOut
+  FileText, Save, Plus, Trash, Settings, LogOut, Pencil
 } from 'lucide-react';
 
 const TABS = [
@@ -272,6 +272,7 @@ function UsersTab({ role: initialRole, onChange }) {
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState(!usersCache[initialRole || '']);
   const [err, setErr] = useState('');
+  const [editing, setEditing] = useState(null); // user being edited
 
   const load = async () => {
     setErr(''); setBusy(true);
@@ -332,14 +333,18 @@ function UsersTab({ role: initialRole, onChange }) {
       <div className="space-y-3">
         {filtered.length === 0 && !busy && <div className="text-slate-500">No users.</div>}
         {filtered.map(u => (
-          <UserRow key={u.id} u={u} onToggle={toggleActive} onDelete={del} />
+          <UserRow key={u.id} u={u} onToggle={toggleActive} onDelete={del} onEdit={() => setEditing(u)} />
         ))}
       </div>
+
+      {editing && (
+        <EditUserModal user={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); onChange?.(); }} />
+      )}
     </div>
   );
 }
 
-function UserRow({ u, onToggle, onDelete }) {
+function UserRow({ u, onToggle, onDelete, onEdit }) {
   const isStudent = u.role === 'student';
   const isTutor   = u.role === 'tutor';
   const [showAddr, setShowAddr] = useState(false);
@@ -443,7 +448,10 @@ function UserRow({ u, onToggle, onDelete }) {
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-1.5">
+        <div className="flex flex-col gap-1.5">
+          <button onClick={() => onEdit?.(u)} className="btn-primary py-1.5 px-3 text-xs">
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </button>
           <button onClick={() => onToggle(u)} title={u.is_active ? 'Suspend' : 'Reactivate'} className="btn-outline py-1.5 px-3 text-xs">
             <Power className="w-3.5 h-3.5" /> {u.is_active ? 'Suspend' : 'Reactivate'}
           </button>
@@ -551,6 +559,184 @@ function Enquiries() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------- EDIT USER MODAL ------------------------- */
+function EditUserModal({ user, onClose, onSaved }) {
+  const isStudent = user.role === 'student';
+  const isTutor   = user.role === 'tutor';
+  const sp = user.student || {};
+  const tp = user.tutor   || {};
+
+  const [form, setForm] = useState(() => ({
+    full_name: user.full_name || '',
+    email: user.email || '',
+    // student fields
+    grade_level:        sp.grade_level || '',
+    preferred_subjects: (sp.preferred_subjects || []).join(', '),
+    address_line1:      sp.address_line1 || '',
+    address_line2:      sp.address_line2 || '',
+    city:               sp.city || '',
+    state:              sp.state || '',
+    zip_code:           sp.zip_code || '',
+    guardian_name:      sp.guardian_name || '',
+    guardian_relation:  sp.guardian_relation || '',
+    guardian_phone:     sp.guardian_phone || '',
+    guardian_email:     sp.guardian_email || '',
+    alternate_phone:    sp.alternate_phone || '',
+    // tutor fields
+    subjects:           (tp.subjects || []).join(', '),
+    qualifications:     tp.qualifications || '',
+    bio:                tp.bio || '',
+    hourly_rate:        tp.hourly_rate ?? '',
+    experience_years:   tp.experience_years ?? '',
+    languages:          (tp.languages || []).join(', '),
+    service_radius_km:  tp.service_radius_km ?? ''
+  }));
+  const [busy, setBusy] = useState(false);
+  const set = (k, v) => setForm({ ...form, [k]: v });
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const payload = { full_name: form.full_name, email: form.email };
+      if (isStudent) {
+        Object.assign(payload, {
+          grade_level: form.grade_level,
+          preferred_subjects: form.preferred_subjects.split(',').map(s => s.trim()).filter(Boolean),
+          address_line1: form.address_line1, address_line2: form.address_line2,
+          city: form.city, state: form.state, zip_code: form.zip_code,
+          guardian_name: form.guardian_name, guardian_relation: form.guardian_relation,
+          guardian_phone: form.guardian_phone, guardian_email: form.guardian_email,
+          alternate_phone: form.alternate_phone
+        });
+      }
+      if (isTutor) {
+        Object.assign(payload, {
+          subjects: form.subjects.split(',').map(s => s.trim()).filter(Boolean),
+          qualifications: form.qualifications, bio: form.bio,
+          hourly_rate: form.hourly_rate === '' ? null : Number(form.hourly_rate),
+          experience_years: form.experience_years === '' ? null : Number(form.experience_years),
+          languages: form.languages.split(',').map(s => s.trim()).filter(Boolean),
+          service_radius_km: form.service_radius_km === '' ? null : Number(form.service_radius_km),
+          city: form.city
+        });
+      }
+      await api.patch(`/api/admin/users/${user.id}`, payload);
+      // Bust any cached lists so the change shows on refresh
+      Object.keys(usersCache).forEach(k => delete usersCache[k]);
+      toast.success('Saved');
+      onSaved?.();
+    } catch (e) { toast.error(e.message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-playful overflow-hidden animate-pop max-h-[92vh] flex flex-col">
+        <div className="relative gradient-rainbow text-white px-6 py-5">
+          <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center">
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="h-display text-2xl font-bold">Edit {isStudent ? 'student' : isTutor ? 'tutor' : 'user'}</h2>
+          <p className="text-white/85 text-sm mt-1">
+            {user.full_name || user.email}
+            {isStudent && sp.roll_number && <> · roll <b>{sp.roll_number}</b> <span className="text-white/70">(read-only)</span></>}
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="overflow-y-auto p-6 space-y-6">
+          {/* Basic */}
+          <section>
+            <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Basic</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div><label className="label">Full name</label>
+                <input className="input" value={form.full_name} onChange={e => set('full_name', e.target.value)} /></div>
+              <div><label className="label">Email</label>
+                <input className="input" type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
+            </div>
+          </section>
+
+          {isStudent && (
+            <>
+              <section>
+                <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Academics</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div><label className="label">Class / Grade</label>
+                    <input className="input" value={form.grade_level} onChange={e => set('grade_level', e.target.value)} /></div>
+                  <div className="sm:col-span-2"><label className="label">Subjects taking tuition for (comma-separated)</label>
+                    <input className="input" value={form.preferred_subjects} onChange={e => set('preferred_subjects', e.target.value)} /></div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Address</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2"><label className="label">Address line 1</label>
+                    <input className="input" value={form.address_line1} onChange={e => set('address_line1', e.target.value)} /></div>
+                  <div className="sm:col-span-2"><label className="label">Address line 2</label>
+                    <input className="input" value={form.address_line2} onChange={e => set('address_line2', e.target.value)} /></div>
+                  <div><label className="label">City</label><input className="input" value={form.city} onChange={e => set('city', e.target.value)} /></div>
+                  <div><label className="label">State</label><input className="input" value={form.state} onChange={e => set('state', e.target.value)} /></div>
+                  <div><label className="label">PIN / Zip</label><input className="input" value={form.zip_code} onChange={e => set('zip_code', e.target.value)} /></div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Guardian / contact</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div><label className="label">Guardian name</label><input className="input" value={form.guardian_name} onChange={e => set('guardian_name', e.target.value)} /></div>
+                  <div><label className="label">Relation</label><input className="input" value={form.guardian_relation} onChange={e => set('guardian_relation', e.target.value)} /></div>
+                  <div><label className="label">Guardian phone</label><input className="input" value={form.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} /></div>
+                  <div><label className="label">Alternate phone</label><input className="input" value={form.alternate_phone} onChange={e => set('alternate_phone', e.target.value)} /></div>
+                  <div className="sm:col-span-2"><label className="label">Guardian email</label><input className="input" type="email" value={form.guardian_email} onChange={e => set('guardian_email', e.target.value)} /></div>
+                </div>
+              </section>
+            </>
+          )}
+
+          {isTutor && (
+            <>
+              <section>
+                <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Teaching profile</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2"><label className="label">Subjects (comma-separated)</label>
+                    <input className="input" value={form.subjects} onChange={e => set('subjects', e.target.value)} /></div>
+                  <div className="sm:col-span-2"><label className="label">Qualifications</label>
+                    <input className="input" value={form.qualifications} onChange={e => set('qualifications', e.target.value)} /></div>
+                  <div className="sm:col-span-2"><label className="label">Bio</label>
+                    <textarea className="input min-h-[90px]" value={form.bio} onChange={e => set('bio', e.target.value)} /></div>
+                  <div><label className="label">Hourly rate (₹)</label>
+                    <input className="input" type="number" value={form.hourly_rate} onChange={e => set('hourly_rate', e.target.value)} /></div>
+                  <div><label className="label">Experience (years)</label>
+                    <input className="input" type="number" value={form.experience_years} onChange={e => set('experience_years', e.target.value)} /></div>
+                  <div><label className="label">Languages (comma-separated)</label>
+                    <input className="input" value={form.languages} onChange={e => set('languages', e.target.value)} /></div>
+                  <div><label className="label">Service radius (km)</label>
+                    <input className="input" type="number" value={form.service_radius_km} onChange={e => set('service_radius_km', e.target.value)} /></div>
+                  <div className="sm:col-span-2"><label className="label">City</label>
+                    <input className="input" value={form.city} onChange={e => set('city', e.target.value)} /></div>
+                </div>
+              </section>
+            </>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 sticky bottom-0 bg-white pb-1">
+            <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
+            <button disabled={busy} className="btn-primary"><Save className="w-4 h-4" /> {busy ? 'Saving…' : 'Save changes'}</button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -312,13 +312,6 @@ function FaqItem({ q, a, defaultOpen = false }) {
 }
 
 export default function Landing() {
-  // Tiny live counters for fun
-  const [studentCount, setStudentCount] = useState(11842);
-  useEffect(() => {
-    const id = setInterval(() => setStudentCount(c => c + Math.floor(Math.random() * 3)), 4500);
-    return () => clearInterval(id);
-  }, []);
-
   // Admin-editable site content (falls back to hardcoded defaults if API/table missing)
   const [cms, setCms] = useState(null);
   useEffect(() => {
@@ -326,6 +319,20 @@ export default function Landing() {
       if (j?.data && Object.keys(j.data).length) setCms(j.data);
     }).catch(() => {});
   }, []);
+
+  // Live student counter — admin-configurable initial value, label and on/off.
+  const counterCfg   = cms?.studentCounter || {};
+  const counterStart = Number.isFinite(counterCfg.initial) ? counterCfg.initial : 11842;
+  const counterEnabled = counterCfg.enabled !== false;
+  const counterSuffix   = counterCfg.suffix   ?? '+ students';
+  const counterSubtitle = counterCfg.subtitle ?? 'learning live on TutorLink right now';
+  const [studentCount, setStudentCount] = useState(counterStart);
+  useEffect(() => { setStudentCount(counterStart); }, [counterStart]);
+  useEffect(() => {
+    if (!counterEnabled) return;
+    const id = setInterval(() => setStudentCount(c => c + Math.floor(Math.random() * 3)), 4500);
+    return () => clearInterval(id);
+  }, [counterEnabled]);
   const cmsHero    = cms?.hero || null;
   const cmsPlans   = (cms?.plans && cms.plans.length) ? cms.plans : null;
   const cmsHourly  = cms?.hourly_starts_at;
@@ -512,17 +519,19 @@ export default function Landing() {
               ))}
             </div>
 
-            <div className="mt-8 flex items-center gap-3 text-sm text-slate-600">
-              <div className="flex -space-x-2">
-                {[IMG.t1, IMG.t2, IMG.t3, IMG.t4].map((u,i) => (
-                  <img onError={onImgErr} key={i} src={u} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
-                ))}
+            {counterEnabled && (
+              <div className="mt-8 flex items-center gap-3 text-sm text-slate-600">
+                <div className="flex -space-x-2">
+                  {[IMG.t1, IMG.t2, IMG.t3, IMG.t4].map((u,i) => (
+                    <img onError={onImgErr} key={i} src={u} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                  ))}
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900">{studentCount.toLocaleString('en-IN')}{counterSuffix}</div>
+                  <div>{counterSubtitle}</div>
+                </div>
               </div>
-              <div>
-                <div className="font-bold text-slate-900">{studentCount.toLocaleString('en-IN')}+ students</div>
-                <div>learning live on TutorLink right now</div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* HERO IMAGE COLLAGE */}

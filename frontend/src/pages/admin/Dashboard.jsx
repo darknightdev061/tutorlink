@@ -1185,6 +1185,9 @@ function SiteContent() {
   const setAnnounce = (k, v) => setContent({ ...content, announcement: { ...(content.announcement || {}), [k]: v } });
   const announce  = content.announcement || {};
 
+  const setCounter = (k, v) => setContent({ ...content, studentCounter: { ...(content.studentCounter || {}), [k]: v } });
+  const counter    = content.studentCounter || {};
+
   return (
     <div className="space-y-8 max-w-4xl">
       {missingTable && (
@@ -1433,6 +1436,27 @@ function SiteContent() {
             <input className="input" value={announce.text1 || ''} onChange={e => setAnnounce('text1', e.target.value)} placeholder="India's most-loved 1-on-1 tuition platform" /></div>
           <div><label className="label">Right text</label>
             <input className="input" value={announce.text2 || ''} onChange={e => setAnnounce('text2', e.target.value)} placeholder="First demo class is 100% FREE — sign up in 60 seconds." /></div>
+        </div>
+      </section>
+
+      {/* HERO LIVE STUDENT COUNTER */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-2">Hero — live "students" counter</h3>
+        <p className="text-sm text-slate-500 mb-4">The little ticker under the hero CTA buttons (e.g. "11,834+ students learning live…"). The number ticks up automatically every few seconds.</p>
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4">
+          <input type="checkbox" checked={counter.enabled !== false}
+            onChange={e => setCounter('enabled', e.target.checked)} /> Show this counter
+        </label>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div><label className="label">Starting number</label>
+            <input className="input" type="number" value={counter.initial ?? 11842}
+              onChange={e => setCounter('initial', Number(e.target.value) || 0)} /></div>
+          <div><label className="label">Suffix after the number</label>
+            <input className="input" value={counter.suffix ?? '+ students'}
+              onChange={e => setCounter('suffix', e.target.value)} placeholder="+ students" /></div>
+          <div><label className="label">Subtitle line</label>
+            <input className="input" value={counter.subtitle ?? 'learning live on TutorLink right now'}
+              onChange={e => setCounter('subtitle', e.target.value)} /></div>
         </div>
       </section>
 

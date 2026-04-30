@@ -1151,6 +1151,40 @@ function SiteContent() {
   const addCity = () => setContent({ ...content, cities: [...cList, 'New city'] });
   const delCity = (i) => setContent({ ...content, cities: cList.filter((_, idx) => idx !== i) });
 
+  // Generic list-of-objects helpers — keeps the rest of this file short.
+  const listSet = (key, defaults) => ({
+    list: content[key] || defaults,
+    setItem: (i, k, v) => setContent({ ...content, [key]: (content[key] || defaults).map((x, idx) => idx === i ? { ...x, [k]: v } : x) }),
+    add:     (seed) => setContent({ ...content, [key]: [...(content[key] || defaults), seed] }),
+    del:     (i) => setContent({ ...content, [key]: (content[key] || defaults).filter((_, idx) => idx !== i) })
+  });
+
+  // Bullet-list-of-strings helpers (e.g. ageGroup points, becomeTutor bullets).
+  const setBullets = (parentKey, idx, bullets) => {
+    const arr = (content[parentKey] || []).map((x, i) => i === idx ? { ...x, points: bullets } : x);
+    setContent({ ...content, [parentKey]: arr });
+  };
+
+  const ageGroupsHelp = listSet('ageGroups', []);
+  const featuresHelp  = listSet('features', []);
+  const stepsHelp     = listSet('steps', []);
+  const tutorsHelp    = listSet('sampleTutors', []);
+  const safetyHelp    = listSet('safety', []);
+  const whyIndiaHelp  = listSet('whyIndia', []);
+  const faqsHelp      = listSet('faqs', []);
+
+  const setBecome = (k, v) => setContent({ ...content, becomeTutor: { ...(content.becomeTutor || {}), [k]: v } });
+  const become    = content.becomeTutor || {};
+  const setBecomeBullet = (i, v) => setBecome('bullets', (become.bullets || []).map((b, idx) => idx === i ? v : b));
+  const addBecomeBullet = () => setBecome('bullets', [...(become.bullets || []), 'New benefit']);
+  const delBecomeBullet = (i) => setBecome('bullets', (become.bullets || []).filter((_, idx) => idx !== i));
+
+  const setFinal  = (k, v) => setContent({ ...content, finalCta: { ...(content.finalCta || {}), [k]: v } });
+  const finalCta  = content.finalCta || {};
+
+  const setAnnounce = (k, v) => setContent({ ...content, announcement: { ...(content.announcement || {}), [k]: v } });
+  const announce  = content.announcement || {};
+
   return (
     <div className="space-y-8 max-w-4xl">
       {missingTable && (
@@ -1372,7 +1406,7 @@ function SiteContent() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="h-display text-xl font-bold">Cities covered ({cList.length})</h3>
-            <p className="text-sm text-slate-500">Used for the trust marquee. The "{cList.length}+ Cities covered" stat updates automatically when you change this list.</p>
+            <p className="text-sm text-slate-500">The "Cities covered" stat on the landing page updates automatically when you change this list.</p>
           </div>
           <button type="button" onClick={addCity} className="btn-outline py-2 px-3 text-sm"><Plus className="w-4 h-4" /> Add city</button>
         </div>
@@ -1386,8 +1420,225 @@ function SiteContent() {
         </div>
       </section>
 
+      {/* ANNOUNCEMENT BAR */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-2">Top announcement bar</h3>
+        <p className="text-sm text-slate-500 mb-4">The thin colorful bar at the very top of the landing page.</p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 sm:col-span-2">
+            <input type="checkbox" checked={announce.enabled !== false}
+              onChange={e => setAnnounce('enabled', e.target.checked)} /> Show announcement bar
+          </label>
+          <div><label className="label">Left text</label>
+            <input className="input" value={announce.text1 || ''} onChange={e => setAnnounce('text1', e.target.value)} placeholder="India's most-loved 1-on-1 tuition platform" /></div>
+          <div><label className="label">Right text</label>
+            <input className="input" value={announce.text2 || ''} onChange={e => setAnnounce('text2', e.target.value)} placeholder="First demo class is 100% FREE — sign up in 60 seconds." /></div>
+        </div>
+      </section>
+
+      {/* AGE GROUPS */}
+      <CardListEditor
+        title="Age-group cards" subtitle={`The "track designed for your child's class" section.`}
+        list={ageGroupsHelp.list} onAdd={() => ageGroupsHelp.add({ title: 'New group', range: 'Classes X – Y', points: ['Bullet 1','Bullet 2'] })} onDel={ageGroupsHelp.del}
+        renderItem={(g, i) => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="label">Title</label>
+              <input className="input" value={g.title || ''} onChange={e => ageGroupsHelp.setItem(i, 'title', e.target.value)} /></div>
+            <div><label className="label">Class range</label>
+              <input className="input" value={g.range || ''} onChange={e => ageGroupsHelp.setItem(i, 'range', e.target.value)} placeholder="Classes 1 – 5" /></div>
+            <div className="sm:col-span-2">
+              <BulletList label="Bullet points"
+                items={g.points || []}
+                onSet={(j, v) => ageGroupsHelp.setItem(i, 'points', (g.points || []).map((p, k) => k === j ? v : p))}
+                onAdd={() => ageGroupsHelp.setItem(i, 'points', [...(g.points || []), 'New point'])}
+                onDel={(j) => ageGroupsHelp.setItem(i, 'points', (g.points || []).filter((_, k) => k !== j))} />
+            </div>
+          </div>
+        )} />
+
+      {/* FEATURES */}
+      <CardListEditor
+        title="Why-you'll-love-us features" subtitle="Cards in the “12 things you'll love” grid."
+        list={featuresHelp.list} onAdd={() => featuresHelp.add({ title: 'New feature', short: 'Short tagline', details: 'Longer description' })} onDel={featuresHelp.del}
+        renderItem={(f, i) => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="label">Title</label>
+              <input className="input" value={f.title || ''} onChange={e => featuresHelp.setItem(i, 'title', e.target.value)} /></div>
+            <div><label className="label">Short tagline</label>
+              <input className="input" value={f.short || ''} onChange={e => featuresHelp.setItem(i, 'short', e.target.value)} /></div>
+            <div className="sm:col-span-2"><label className="label">Long description</label>
+              <textarea className="input min-h-[80px]" value={f.details || ''} onChange={e => featuresHelp.setItem(i, 'details', e.target.value)} /></div>
+          </div>
+        )} />
+
+      {/* HOW IT WORKS STEPS */}
+      <CardListEditor
+        title="How it works — steps" subtitle="The 5-step strip below the features."
+        list={stepsHelp.list} onAdd={() => stepsHelp.add({ title: 'New step', desc: 'What happens here' })} onDel={stepsHelp.del}
+        renderItem={(s, i) => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="label">Title</label>
+              <input className="input" value={s.title || ''} onChange={e => stepsHelp.setItem(i, 'title', e.target.value)} /></div>
+            <div><label className="label">Description</label>
+              <input className="input" value={s.desc || ''} onChange={e => stepsHelp.setItem(i, 'desc', e.target.value)} /></div>
+          </div>
+        )} />
+
+      {/* SAMPLE TUTORS STRIP */}
+      <CardListEditor
+        title='"Meet our stars" tutor cards' subtitle="The 4 sample tutor cards on the landing page."
+        list={tutorsHelp.list} onAdd={() => tutorsHelp.add({ name: 'New Tutor', city: 'Bengaluru', subj: ['Maths'], price: 499, rate: 4.9, sessions: 100, exp: 'IIT • 5 yrs', avatar: '', badge: 'Top tutor' })} onDel={tutorsHelp.del}
+        renderItem={(t, i) => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="label">Name</label>
+              <input className="input" value={t.name || ''} onChange={e => tutorsHelp.setItem(i, 'name', e.target.value)} /></div>
+            <div><label className="label">City</label>
+              <input className="input" value={t.city || ''} onChange={e => tutorsHelp.setItem(i, 'city', e.target.value)} /></div>
+            <div><label className="label">Subjects (comma-separated)</label>
+              <input className="input" value={(t.subj || []).join(', ')} onChange={e => tutorsHelp.setItem(i, 'subj', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} /></div>
+            <div><label className="label">Hourly rate (₹)</label>
+              <input className="input" type="number" value={t.price || 0} onChange={e => tutorsHelp.setItem(i, 'price', Number(e.target.value) || 0)} /></div>
+            <div><label className="label">Rating (e.g. 4.9)</label>
+              <input className="input" type="number" step="0.1" value={t.rate || 0} onChange={e => tutorsHelp.setItem(i, 'rate', Number(e.target.value) || 0)} /></div>
+            <div><label className="label">Sessions</label>
+              <input className="input" type="number" value={t.sessions || 0} onChange={e => tutorsHelp.setItem(i, 'sessions', Number(e.target.value) || 0)} /></div>
+            <div><label className="label">Experience badge text</label>
+              <input className="input" value={t.exp || ''} onChange={e => tutorsHelp.setItem(i, 'exp', e.target.value)} placeholder="IIT-Madras • 6 yrs" /></div>
+            <div><label className="label">Pill badge</label>
+              <input className="input" value={t.badge || ''} onChange={e => tutorsHelp.setItem(i, 'badge', e.target.value)} placeholder="JEE Mentor / Loved by kids" /></div>
+            <div className="sm:col-span-2"><label className="label">Avatar image URL</label>
+              <input className="input" value={t.avatar || ''} onChange={e => tutorsHelp.setItem(i, 'avatar', e.target.value)} placeholder="https://..." /></div>
+          </div>
+        )} />
+
+      {/* WHY-INDIA TILES */}
+      <CardListEditor
+        title='"Made in India" tiles' subtitle="The 6 tiles next to the India image."
+        list={whyIndiaHelp.list} onAdd={() => whyIndiaHelp.add({ t: 'New tile', d: 'Short detail' })} onDel={whyIndiaHelp.del}
+        renderItem={(x, i) => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="label">Title</label>
+              <input className="input" value={x.t || ''} onChange={e => whyIndiaHelp.setItem(i, 't', e.target.value)} /></div>
+            <div><label className="label">Detail</label>
+              <input className="input" value={x.d || ''} onChange={e => whyIndiaHelp.setItem(i, 'd', e.target.value)} /></div>
+          </div>
+        )} />
+
+      {/* SAFETY ITEMS */}
+      <CardListEditor
+        title="Safety section bullets" subtitle="The 6 safety tiles next to the parent image."
+        list={safetyHelp.list} onAdd={() => safetyHelp.add({ title: 'New safety pillar', text: 'Detail' })} onDel={safetyHelp.del}
+        renderItem={(s, i) => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="label">Title</label>
+              <input className="input" value={s.title || ''} onChange={e => safetyHelp.setItem(i, 'title', e.target.value)} /></div>
+            <div><label className="label">Detail</label>
+              <input className="input" value={s.text || ''} onChange={e => safetyHelp.setItem(i, 'text', e.target.value)} /></div>
+          </div>
+        )} />
+
+      {/* BECOME A TUTOR */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-4">"Become a tutor" section</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2"><label className="label">Title (use plain text — gradient styling is automatic)</label>
+            <input className="input" value={become.title || ''} onChange={e => setBecome('title', e.target.value)} placeholder="Earn up to ₹80,000 / month teaching what you love" /></div>
+          <div className="sm:col-span-2"><label className="label">Description paragraph</label>
+            <textarea className="input min-h-[80px]" value={become.desc || ''} onChange={e => setBecome('desc', e.target.value)} /></div>
+          <div><label className="label">Big badge (over photo)</label>
+            <input className="input" value={become.badgeBig || ''} onChange={e => setBecome('badgeBig', e.target.value)} placeholder="3,400+ tutors" /></div>
+          <div><label className="label">Small badge (over photo)</label>
+            <input className="input" value={become.badgeSmall || ''} onChange={e => setBecome('badgeSmall', e.target.value)} placeholder="already earning on TutorLink" /></div>
+          <div className="sm:col-span-2"><label className="label">Button text</label>
+            <input className="input" value={become.cta || ''} onChange={e => setBecome('cta', e.target.value)} placeholder="Become a tutor — apply free" /></div>
+        </div>
+        <div className="mt-4">
+          <BulletList label="Bullet points"
+            items={become.bullets || []}
+            onSet={(i, v) => setBecomeBullet(i, v)}
+            onAdd={addBecomeBullet}
+            onDel={delBecomeBullet} />
+        </div>
+      </section>
+
+      {/* FAQs */}
+      <CardListEditor
+        title="FAQs" subtitle="Frequently asked questions accordion."
+        list={faqsHelp.list} onAdd={() => faqsHelp.add({ q: 'New question?', a: 'Answer here.' })} onDel={faqsHelp.del}
+        renderItem={(f, i) => (
+          <div className="grid gap-3">
+            <div><label className="label">Question</label>
+              <input className="input" value={f.q || ''} onChange={e => faqsHelp.setItem(i, 'q', e.target.value)} /></div>
+            <div><label className="label">Answer</label>
+              <textarea className="input min-h-[80px]" value={f.a || ''} onChange={e => faqsHelp.setItem(i, 'a', e.target.value)} /></div>
+          </div>
+        )} />
+
+      {/* FINAL CTA */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-4">Final call-to-action banner</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2"><label className="label">Title</label>
+            <input className="input" value={finalCta.title || ''} onChange={e => setFinal('title', e.target.value)} placeholder="Your child's aha! moment is just one click away" /></div>
+          <div className="sm:col-span-2"><label className="label">Subtitle</label>
+            <textarea className="input min-h-[70px]" value={finalCta.subtitle || ''} onChange={e => setFinal('subtitle', e.target.value)} /></div>
+          <div><label className="label">Primary button</label>
+            <input className="input" value={finalCta.primary || ''} onChange={e => setFinal('primary', e.target.value)} placeholder="Get my child a tutor" /></div>
+          <div><label className="label">Tutor button</label>
+            <input className="input" value={finalCta.tutor || ''} onChange={e => setFinal('tutor', e.target.value)} placeholder="I want to teach" /></div>
+        </div>
+      </section>
+
       <div className="sticky bottom-4 flex justify-end">
         <button onClick={save} disabled={busy} className="btn-primary shadow-playful"><Save className="w-4 h-4" /> {busy ? 'Saving…' : 'Save all changes'}</button>
+      </div>
+    </div>
+  );
+}
+
+/* Reusable collapsible editor for an array of similar items. */
+function CardListEditor({ title, subtitle, list, onAdd, onDel, renderItem }) {
+  return (
+    <section className="card-fun p-6">
+      <details>
+        <summary className="cursor-pointer flex items-center justify-between gap-3 select-none">
+          <div>
+            <h3 className="h-display text-xl font-bold">{title} ({list.length})</h3>
+            {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+          </div>
+          <span className="text-xs text-slate-400 font-semibold">click to expand</span>
+        </summary>
+        <div className="mt-4 space-y-3">
+          {list.map((item, i) => (
+            <div key={i} className="border-2 border-slate-100 rounded-2xl p-4 bg-slate-50/40">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">{renderItem(item, i)}</div>
+                <button type="button" onClick={() => onDel(i)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={onAdd} className="btn-outline py-2 px-3 text-sm"><Plus className="w-4 h-4" /> Add item</button>
+        </div>
+      </details>
+    </section>
+  );
+}
+
+/* Reusable bullet-list (string array) editor — used inside other editors. */
+function BulletList({ label, items, onSet, onAdd, onDel }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="label !mb-0">{label}</label>
+        <button type="button" onClick={onAdd} className="btn-ghost py-1 px-2 text-xs"><Plus className="w-3.5 h-3.5" /> Add</button>
+      </div>
+      <div className="space-y-2">
+        {(items || []).map((it, i) => (
+          <div key={i} className="flex gap-2">
+            <input className="input flex-1" value={it} onChange={e => onSet(i, e.target.value)} />
+            <button type="button" onClick={() => onDel(i)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
+          </div>
+        ))}
       </div>
     </div>
   );

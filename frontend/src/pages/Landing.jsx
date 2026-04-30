@@ -322,7 +322,7 @@ export default function Landing() {
   // Admin-editable site content (falls back to hardcoded defaults if API/table missing)
   const [cms, setCms] = useState(null);
   useEffect(() => {
-    fetch('/api/site/content/landing').then(r => r.ok ? r.json() : null).then(j => {
+    fetch('/api/site/content/landing', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
       if (j?.data && Object.keys(j.data).length) setCms(j.data);
     }).catch(() => {});
   }, []);
@@ -356,7 +356,85 @@ export default function Landing() {
   // Re-bind the age-group photos to the effective image map so admin edits
   // propagate to the "for every age" cards as well.
   const ageImgKey = { 'Classes 1 – 5': 'primary', 'Classes 6 – 8': 'middle', 'Classes 9 – 10': 'high', 'Classes 11 – 12': 'online' };
-  const effAgeGroups = ageGroups.map(g => ({ ...g, img: I[ageImgKey[g.range]] || g.img }));
+  const baseAgeGroups = (cms?.ageGroups && cms.ageGroups.length)
+    ? cms.ageGroups.map((g, i) => ({ ...(ageGroups[i] || ageGroups[0]), ...g }))
+    : ageGroups;
+  const effAgeGroups = baseAgeGroups.map(g => ({ ...g, img: I[ageImgKey[g.range]] || g.img }));
+
+  // Features
+  const effFeatures = (cms?.features && cms.features.length)
+    ? cms.features.map((f, i) => ({ ...(features[i] || features[0]), ...f }))
+    : features;
+
+  // How it works steps
+  const effSteps = (cms?.steps && cms.steps.length)
+    ? cms.steps.map((s, i) => ({ ...(steps[i] || steps[0]), ...s }))
+    : steps;
+
+  // Sample tutors strip
+  const effSampleTutors = (cms?.sampleTutors && cms.sampleTutors.length)
+    ? cms.sampleTutors.map((t, i) => ({ ...(sampleTutors[i] || sampleTutors[0]), ...t }))
+    : sampleTutors;
+
+  // Safety bullets
+  const effSafety = (cms?.safety && cms.safety.length)
+    ? cms.safety.map((s, i) => ({ ...(safety[i] || safety[0]), ...s }))
+    : safety;
+
+  // FAQs
+  const effFaqs = (cms?.faqs && cms.faqs.length) ? cms.faqs : faqs;
+
+  // Why-India bullet tiles
+  const defaultWhyIndia = [
+    { ic: BookOpenCheck, t: 'CBSE • ICSE • IB • All State Boards', d: 'Tutors tagged by board they teach' },
+    { ic: IndianRupee,   t: 'UPI, Paytm, EMI all accepted',        d: 'No-cost EMI on plans above ₹3,000' },
+    { ic: Languages,     t: '12 Indian languages',                 d: 'Switch fluidly between English & home-tongue' },
+    { ic: BookOpen,      t: 'Boards-focused, Class 1–12',           d: 'Tutors aligned to your child\'s exact syllabus' },
+    { ic: Clock,         t: 'Indian timings (5–10 PM rush)',         d: 'Highest tutor availability in evening slots' },
+    { ic: Phone,         t: 'WhatsApp-first communication',          d: 'Class reminders, reports, doubts — all on WA' }
+  ];
+  const effWhyIndia = (cms?.whyIndia && cms.whyIndia.length)
+    ? cms.whyIndia.map((x, i) => ({ ...(defaultWhyIndia[i] || defaultWhyIndia[0]), ...x }))
+    : defaultWhyIndia;
+
+  // Become-a-tutor section
+  const cmsBecome = cms?.becomeTutor || {};
+  const effBecome = {
+    title:   cmsBecome.title    || 'Earn up to ₹80,000 / month teaching what you love',
+    desc:    cmsBecome.desc     || "Whether you're a college student, a working professional, or a retired teacher — share your knowledge, set your own rates and schedule. Indian-payment-friendly payouts every Friday.",
+    bullets: (cmsBecome.bullets && cmsBecome.bullets.length) ? cmsBecome.bullets : [
+      'Free signup — only 18% commission per session, lower than the industry',
+      'Set your own ₹/hour, weekday & weekend timings, online vs home',
+      'Weekly UPI / bank transfer payouts every Friday — no waiting',
+      'Free training, lesson templates and parent-handling masterclass',
+      'Featured profile boost when you cross 4.8★ and 50 sessions'
+    ],
+    cta:        cmsBecome.cta        || 'Become a tutor — apply free',
+    badgeBig:   cmsBecome.badgeBig   || '3,400+ tutors',
+    badgeSmall: cmsBecome.badgeSmall || 'already earning on TutorLink'
+  };
+
+  // Final CTA block
+  const cmsCta = cms?.finalCta || {};
+  const effCta = {
+    title:    cmsCta.title    || "Your child's aha! moment is just one click away",
+    subtitle: cmsCta.subtitle || 'Join 12,000+ Indian families. First demo class is on us — no card, no commitment, no awkward sales call.',
+    primary:  cmsCta.primary  || 'Get my child a tutor',
+    tutor:    cmsCta.tutor    || 'I want to teach'
+  };
+
+  // Top announcement bar
+  const cmsAnnounce = cms?.announcement || {};
+  const annText1 = cmsAnnounce.text1 || "India's most-loved 1-on-1 tuition platform";
+  const annText2 = cmsAnnounce.text2 || 'First demo class is 100% FREE — sign up in 60 seconds.';
+  const annEnabled = cmsAnnounce.enabled !== false;
+
+  // Section headings (title + subtitle pairs) — all editable.
+  const heads = cms?.headings || {};
+  const head = (key, defTitle, defSub) => ({
+    title:    heads[key]?.title    ?? defTitle,
+    subtitle: heads[key]?.subtitle ?? defSub
+  });
 
   // Stats — CMS overrides individual values, but the "cities covered" stat
   // auto-syncs to the cities list so admin doesn't have to edit two places.
@@ -377,14 +455,16 @@ export default function Landing() {
   return (
     <div className="overflow-x-hidden">
       {/* ANNOUNCEMENT BAR */}
-      <div className="gradient-rainbow text-white text-sm">
-        <div className="container-x py-2.5 flex flex-wrap items-center justify-center gap-2 text-center">
-          <Sparkles className="w-4 h-4 animate-wiggle" />
-          <span className="font-semibold">India's most-loved 1-on-1 tuition platform</span>
-          <span className="opacity-80">•</span>
-          <span>First demo class is <span className="font-bold underline underline-offset-2">100% FREE</span> — sign up in 60 seconds.</span>
+      {annEnabled && (
+        <div className="gradient-rainbow text-white text-sm">
+          <div className="container-x py-2.5 flex flex-wrap items-center justify-center gap-2 text-center">
+            <Sparkles className="w-4 h-4 animate-wiggle" />
+            <span className="font-semibold">{annText1}</span>
+            <span className="opacity-80">•</span>
+            <span>{annText2}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* HERO */}
       <section className="relative gradient-hero overflow-hidden">
@@ -496,21 +576,6 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* trust marquee */}
-        <div className="border-t border-slate-200/70 bg-white/60 backdrop-blur">
-          <div className="container-x py-5">
-            <div className="text-center text-xs font-bold tracking-widest text-slate-500 mb-3">
-              TRUSTED BY PARENTS ACROSS INDIA
-            </div>
-            <div className="scroll-fade-x overflow-hidden">
-              <div className="flex gap-10 animate-marquee whitespace-nowrap text-slate-500 font-bold text-lg">
-                {effCities.concat(effCities).map((c,i) => (
-                  <span key={i} className="flex items-center gap-2"><MapPin className="w-4 h-4 text-brand-500" /> {c}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* STATS */}
@@ -607,7 +672,7 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map(f => (
+            {effFeatures.map(f => (
               <div key={f.title} className="card-fun p-6 group">
                 <div className={`w-12 h-12 rounded-2xl ${f.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                   <f.icon className="w-6 h-6" />
@@ -630,7 +695,7 @@ export default function Landing() {
 
         <div className="grid md:grid-cols-5 gap-4 relative">
           <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-1 bg-gradient-to-r from-brand-200 via-candy-200 to-sunny-200 rounded-full" />
-          {steps.map(s => (
+          {effSteps.map(s => (
             <div key={s.n} className="relative card-fun p-5 text-center">
               <div className={`w-14 h-14 mx-auto rounded-2xl ${s.color} flex items-center justify-center mb-3`}>
                 <s.icon className="w-7 h-7" />
@@ -655,7 +720,7 @@ export default function Landing() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {sampleTutors.map(t => (
+            {effSampleTutors.map(t => (
               <div key={t.name} className="card-fun overflow-hidden">
                 <div className="relative h-44">
                   <img onError={onImgErr} src={t.avatar} alt={t.name} loading="lazy" className="w-full h-full object-cover" />
@@ -703,14 +768,7 @@ export default function Landing() {
             <p className="text-slate-600 mt-4 text-lg">We don't just translate Western ed-tech for India. TutorLink was designed from day one for the way Indian families learn.</p>
 
             <div className="mt-8 grid sm:grid-cols-2 gap-4">
-              {[
-                { ic: BookOpenCheck, t: 'CBSE • ICSE • IB • All State Boards', d: 'Tutors tagged by board they teach' },
-                { ic: IndianRupee,   t: 'UPI, Paytm, EMI all accepted',          d: 'No-cost EMI on plans above ₹3,000' },
-                { ic: Languages,     t: '12 Indian languages',                  d: 'Switch fluidly between English & home-tongue' },
-                { ic: BookOpen,      t: 'Boards-focused, Class 1–12',            d: 'Tutors aligned to your child\'s exact syllabus' },
-                { ic: Clock,         t: 'Indian timings (5–10 PM rush)',         d: 'Highest tutor availability in evening slots' },
-                { ic: Phone,         t: 'WhatsApp-first communication',          d: 'Class reminders, reports, doubts — all on WA' }
-              ].map((x,i) => (
+              {effWhyIndia.map((x,i) => (
                 <div key={i} className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
                     <x.ic className="w-5 h-5" />
@@ -779,7 +837,7 @@ export default function Landing() {
             <h2 className="h-display text-3xl md:text-5xl font-bold leading-tight">A platform parents <span className="text-gradient">actually trust</span></h2>
             <p className="text-slate-600 mt-4 text-lg">Your child's safety isn't a checkbox — it's the foundation of TutorLink. Every tutor, every chat, every class is monitored, encrypted and policy-bound.</p>
             <div className="mt-7 grid sm:grid-cols-2 gap-4">
-              {safety.map(s => (
+              {effSafety.map(s => (
                 <div key={s.title} className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl bg-mint-100 text-mint-700 flex items-center justify-center flex-shrink-0">
                     <s.icon className="w-5 h-5" />
@@ -845,27 +903,21 @@ export default function Landing() {
         <div className="card-fun overflow-hidden grid lg:grid-cols-2 gap-0">
           <div className="p-8 md:p-12">
             <span className="badge bg-grape-100 text-grape-700 mb-3"><Wallet className="w-3.5 h-3.5" /> For tutors</span>
-            <h2 className="h-display text-3xl md:text-4xl font-bold leading-tight">Earn up to <span className="text-gradient">₹80,000 / month</span> teaching what you love</h2>
-            <p className="text-slate-600 mt-4 leading-relaxed">Whether you're a college student, a working professional, or a retired teacher — share your knowledge, set your own rates and schedule. Indian-payment-friendly payouts every Friday.</p>
+            <h2 className="h-display text-3xl md:text-4xl font-bold leading-tight">{effBecome.title}</h2>
+            <p className="text-slate-600 mt-4 leading-relaxed">{effBecome.desc}</p>
             <ul className="mt-5 space-y-2.5">
-              {[
-                'Free signup — only 18% commission per session, lower than the industry',
-                'Set your own ₹/hour, weekday & weekend timings, online vs home',
-                'Weekly UPI / bank transfer payouts every Friday — no waiting',
-                'Free training, lesson templates and parent-handling masterclass',
-                'Featured profile boost when you cross 4.8★ and 50 sessions'
-              ].map((x,i) => (
+              {effBecome.bullets.map((x,i) => (
                 <li key={i} className="flex gap-2 text-slate-700"><CheckCircle2 className="w-5 h-5 text-mint-500 flex-shrink-0" /> {x}</li>
               ))}
             </ul>
-            <button onClick={() => openTutorForm('become_tutor_section')} className="btn-primary mt-7">Become a tutor — apply free <ArrowRight className="w-4 h-4" /></button>
+            <button onClick={() => openTutorForm('become_tutor_section')} className="btn-primary mt-7">{effBecome.cta} <ArrowRight className="w-4 h-4" /></button>
           </div>
           <div className="relative min-h-[320px]">
             <img onError={onImgErr} src={I.classroom} className="absolute inset-0 w-full h-full object-cover" alt="Tutor" loading="lazy" />
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-900/70 via-grape-700/40 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 text-white">
-              <div className="text-3xl font-bold h-display">3,400+ tutors</div>
-              <div className="opacity-90">already earning on TutorLink</div>
+              <div className="text-3xl font-bold h-display">{effBecome.badgeBig}</div>
+              <div className="opacity-90">{effBecome.badgeSmall}</div>
             </div>
           </div>
         </div>
@@ -880,7 +932,7 @@ export default function Landing() {
             <p className="text-slate-600 mt-3">Can't find what you need? <a href="mailto:hello@tutorlink.in" className="text-brand-700 font-semibold underline">Email us</a> or WhatsApp <b>+91-90000-12345</b>.</p>
           </div>
           <div className="space-y-3">
-            {faqs.map((f,i) => <FaqItem key={i} q={f.q} a={f.a} defaultOpen={i === 0} />)}
+            {effFaqs.map((f,i) => <FaqItem key={i} q={f.q} a={f.a} defaultOpen={i === 0} />)}
           </div>
         </div>
       </section>
@@ -895,14 +947,14 @@ export default function Landing() {
               <Heart className="w-8 h-8 text-white fill-white animate-bounce-soft" />
               <Sparkles className="w-8 h-8 text-sunny-200 animate-wiggle [animation-delay:.4s]" />
             </div>
-            <h2 className="h-display text-3xl md:text-5xl font-bold">Your child's <span className="kid-underline text-slate-900">aha! moment</span> is just one click away</h2>
-            <p className="text-white/90 mt-4 max-w-2xl mx-auto text-lg">Join 12,000+ Indian families. First demo class is on us — no card, no commitment, no awkward sales call.</p>
+            <h2 className="h-display text-3xl md:text-5xl font-bold">{effCta.title}</h2>
+            <p className="text-white/90 mt-4 max-w-2xl mx-auto text-lg">{effCta.subtitle}</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <button onClick={() => openStudentForm('final_cta')} className="btn bg-white text-candy-700 hover:bg-slate-100 px-7 py-3.5 text-base">
-                <Smile className="w-4 h-4" /> Get my child a tutor
+                <Smile className="w-4 h-4" /> {effCta.primary}
               </button>
               <button onClick={() => openTutorForm('final_cta')} className="btn border-2 border-white/60 text-white hover:bg-white/10 px-7 py-3.5 text-base">
-                <GraduationCap className="w-4 h-4" /> I want to teach
+                <GraduationCap className="w-4 h-4" /> {effCta.tutor}
               </button>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-white/85">

@@ -48,8 +48,7 @@ const subjects = [
   { name: 'Social Studies',  icon: Globe2,      color: 'bg-grape-100 text-grape-700',  count: 174, blurb: 'History, Civics, Geography' },
   { name: 'Drawing & Art',   icon: Palette,     color: 'bg-coral-100 text-coral-700',  count: 132, blurb: 'Sketching, painting, crafts' },
   { name: 'Music',           icon: Music,       color: 'bg-candy-100 text-candy-700',  count:  94, blurb: 'Vocals, keyboard, guitar' },
-  { name: 'Coding for Kids', icon: Gamepad2,    color: 'bg-mint-100 text-mint-700',    count: 156, blurb: 'Scratch, robotics, games' },
-  { name: 'Olympiad Prep',   icon: Trophy,      color: 'bg-sunny-100 text-sunny-800',  count: 109, blurb: 'NSO, IMO, NSTSE, KVPY' }
+  { name: 'Coding for Kids', icon: Gamepad2,    color: 'bg-mint-100 text-mint-700',    count: 156, blurb: 'Scratch, robotics, games' }
 ];
 
 const ageGroups = [
@@ -78,7 +77,7 @@ const ageGroups = [
       'Concept-first teaching aligned to CBSE, ICSE & all major State Boards',
       'Doubt-clearing within 24 hours over chat — no question is too small',
       'Mental maths, NCERT mastery, science experiments and creative writing',
-      'Olympiad foundation tracks (NSO, IMO, NSTSE) bundled into the plan'
+      'Foundation tracks for higher classes — strong fundamentals before Class 9'
     ]
   },
   {
@@ -91,22 +90,22 @@ const ageGroups = [
     points: [
       'Full board-syllabus coverage with chapter-wise PYQ practice',
       'Pre-board mock tests, error analysis and a custom revision planner',
-      'PCM/PCB foundation for JEE / NEET aspirants — early head-start',
+      'PCM / PCB / Commerce stream readiness — strong concept-base for Class 11',
       'Career & stream-selection counselling included free at the end of Class 10'
     ]
   },
   {
     title: 'Future Makers',
-    range: 'Classes 11 – 12 & Drop-year',
+    range: 'Classes 11 – 12',
     img: IMG.online,
     color: 'from-candy-500 to-grape-600',
     chip: 'bg-candy-100 text-candy-700',
     icon: Rocket,
     points: [
-      'JEE Main + Advanced, NEET, CUET, CA Foundation and CLAT-ready tutors',
-      'IIT / AIIMS / NIT alumni mentors available with verified credentials',
-      'Daily DPP, weekly tests, all-India rank simulator and detailed analytics',
-      'Boards + competitive prep balanced — no more juggling two coachings'
+      'Full Class 11 & 12 board coverage — Science, Commerce and Humanities',
+      'Subject-expert tutors with verified credentials and proven results',
+      'Daily practice problems, weekly tests and detailed performance analytics',
+      'Career counselling + stream guidance to help pick the next step confidently'
     ]
   }
 ];
@@ -259,13 +258,13 @@ const plans = [
     price: 5999, per: 'month',
     color: 'border-candy-500 ring-4 ring-candy-100',
     btn: 'btn-candy',
-    desc: 'For boards & competitive prep — unlimited subjects + mentor.',
+    desc: 'For boards & all-round prep — unlimited subjects + mentor.',
     features: [
       'Unlimited sessions (Mon–Sat)',
-      'All subjects + Olympiad prep',
+      'All subjects covered (Class 1–12)',
       'Daily DPPs + AI doubt-bot',
       'Dedicated academic mentor',
-      'JEE / NEET / CUET test series',
+      'Weekly chapter tests + analysis',
       '1-on-1 career counselling'
     ],
     badge: 'Best Value'
@@ -290,7 +289,7 @@ const safety = [
 
 const faqs = [
   { q: 'Is TutorLink only for online tuitions?', a: 'No — you can choose online live classes (built-in whiteboard) or invite a verified tutor to your home. We support both, and your child can switch between modes any time.' },
-  { q: 'Which boards and exams are covered?', a: 'CBSE, ICSE, IB, IGCSE and all State Boards (Maharashtra, Tamil Nadu, Karnataka, Telangana, Andhra, Kerala, West Bengal, Bihar, UP, Rajasthan and more). Competitive: JEE Main + Advanced, NEET, CUET, NTSE, KVPY, Olympiads, CLAT and CA Foundation.' },
+  { q: 'Which boards and classes are covered?', a: 'We support Class 1 through Class 12 across CBSE, ICSE, IB, IGCSE and every State Board (Maharashtra, Tamil Nadu, Karnataka, Telangana, Andhra, Kerala, West Bengal, Bihar, UP, Rajasthan and more). Specialised exam tracks (Olympiads, JEE, NEET) can be added on request.' },
   { q: 'Are tutors really verified?', a: 'Yes. Every tutor goes through Aadhaar e-KYC, PAN matching, address proof, qualification verification, a manual subject-matter interview and a child-safety briefing. Only about 14% of applicants make it onto the platform.' },
   { q: 'What does it cost in INR?', a: 'Hourly rates start at ₹199 for primary classes and average ₹350–₹600 for senior classes. Monthly plans begin at ₹1,999. You can pay via UPI, cards, net-banking, Paytm or no-cost EMI on Razorpay.' },
   { q: 'What if my child doesn\'t like the tutor?', a: 'Every tutor offers a free 30-minute demo. If you don\'t love it, switch tutors instantly at zero cost — even mid-month. Your remaining sessions transfer to the new tutor automatically.' },
@@ -328,10 +327,47 @@ export default function Landing() {
     }).catch(() => {});
   }, []);
   const cmsHero    = cms?.hero || null;
-  const cmsStats   = (cms?.stats && cms.stats.length) ? cms.stats : null;
   const cmsPlans   = (cms?.plans && cms.plans.length) ? cms.plans : null;
   const cmsHourly  = cms?.hourly_starts_at;
   const cmsContact = cms?.contact;
+
+  // Effective images — CMS overrides, blank string falls back to default IMG.
+  const cmsImg = cms?.images || {};
+  const I = { ...IMG };
+  for (const k of Object.keys(cmsImg)) if (cmsImg[k]) I[k] = cmsImg[k];
+
+  // Effective subjects — CMS overrides; blank list falls back to defaults.
+  const ICONS = {
+    Calculator, Atom, FlaskConical, Microscope, BookOpen, Code2, Languages,
+    Globe2, Palette, Music, Gamepad2, Trophy, PenTool, Brain, Lightbulb,
+    Rocket, GraduationCap, Heart
+  };
+  const effSubjects = (cms?.subjects && cms.subjects.length)
+    ? cms.subjects.map(s => ({ ...s, icon: ICONS[s.icon] || BookOpen }))
+    : subjects;
+
+  // Effective cities — CMS overrides; falls back to a default list.
+  const defaultCities = ['Bengaluru','Delhi NCR','Mumbai','Chennai','Hyderabad','Kolkata','Pune','Ahmedabad','Jaipur','Lucknow','Kochi','Chandigarh','Bhopal','Indore','Patna','Coimbatore'];
+  const effCities = (cms?.cities && cms.cities.length) ? cms.cities : defaultCities;
+
+  // Effective testimonials — CMS overrides; empty list hides the section.
+  const effTestimonials = (cms?.testimonials && Array.isArray(cms.testimonials)) ? cms.testimonials : testimonials;
+
+  // Re-bind the age-group photos to the effective image map so admin edits
+  // propagate to the "for every age" cards as well.
+  const ageImgKey = { 'Classes 1 – 5': 'primary', 'Classes 6 – 8': 'middle', 'Classes 9 – 10': 'high', 'Classes 11 – 12': 'online' };
+  const effAgeGroups = ageGroups.map(g => ({ ...g, img: I[ageImgKey[g.range]] || g.img }));
+
+  // Stats — CMS overrides individual values, but the "cities covered" stat
+  // auto-syncs to the cities list so admin doesn't have to edit two places.
+  const cmsStats = (cms?.stats && cms.stats.length) ? cms.stats : null;
+  const baseStats = cmsStats || stats.map(s => ({ value: s.v, label: s.l }));
+  const effStats = baseStats.map((s, i) => {
+    const fb = stats[i] || stats[0];
+    if (/cities/i.test(s.label || fb.l)) return { ...s, value: `${effCities.length}+` };
+    if (/subjects/i.test(s.label || fb.l) && cms?.subjects?.length) return { ...s, value: `${effSubjects.length}+` };
+    return s;
+  });
 
   // Public no-login enquiry modal
   const [enquiry, setEnquiry] = useState({ open: false, type: 'student', source: 'landing' });
@@ -363,13 +399,13 @@ export default function Landing() {
             </span>
             <h1 className="h-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.05]">
               {cmsHero?.title_part1 || 'Learning that feels'}<br />
-              like <span className="kid-underline text-gradient">{cmsHero?.title_highlight || 'play time'}</span> 🎉<br />
+              like <span className="kid-underline"><span className="text-gradient">{cmsHero?.title_highlight || 'play time'}</span></span> 🎉<br />
               {cmsHero ? cmsHero.title_part2 : <>not <span className="line-through text-slate-400">homework</span></>}
             </h1>
             <p className="mt-6 text-lg text-slate-700 max-w-xl leading-relaxed">
               {cmsHero?.subtitle || (
                 <>India's friendliest 1-on-1 tutoring platform — connect with a <b>verified, hand-picked tutor</b> for
-                your child, from <b>Class 1 to Class 12</b>. Boards, JEE, NEET, Olympiads, coding, music & more —
+                your child, from <b>Class 1 to Class 12</b>. Boards, coding, music, art & more —
                 all from <b>₹{cmsHourly || 199} / hour</b>.</>
               )}
             </p>
@@ -411,9 +447,9 @@ export default function Landing() {
 
           {/* HERO IMAGE COLLAGE */}
           <div className="relative h-[500px] hidden lg:block">
-            <img onError={onImgErr} src={IMG.heroKid} alt="Happy student" loading="lazy"
+            <img onError={onImgErr} src={I.heroKid} alt="Happy student" loading="lazy"
               className="absolute top-0 right-0 w-[78%] h-[58%] object-cover rounded-3xl shadow-playful animate-float" />
-            <img onError={onImgErr} src={IMG.online} alt="Online tutor" loading="lazy"
+            <img onError={onImgErr} src={I.online} alt="Online tutor" loading="lazy"
               className="absolute bottom-0 left-0 w-[62%] h-[48%] object-cover rounded-3xl shadow-candy animate-float [animation-delay:1.2s]" />
 
             {/* Floating tutor card */}
@@ -468,7 +504,7 @@ export default function Landing() {
             </div>
             <div className="scroll-fade-x overflow-hidden">
               <div className="flex gap-10 animate-marquee whitespace-nowrap text-slate-500 font-bold text-lg">
-                {['Bengaluru','Delhi NCR','Mumbai','Chennai','Hyderabad','Kolkata','Pune','Ahmedabad','Jaipur','Lucknow','Kochi','Chandigarh','Bhopal','Indore','Patna','Coimbatore'].concat(['Bengaluru','Delhi NCR','Mumbai','Chennai','Hyderabad','Kolkata','Pune','Ahmedabad','Jaipur','Lucknow','Kochi','Chandigarh','Bhopal','Indore','Patna','Coimbatore']).map((c,i) => (
+                {effCities.concat(effCities).map((c,i) => (
                   <span key={i} className="flex items-center gap-2"><MapPin className="w-4 h-4 text-brand-500" /> {c}</span>
                 ))}
               </div>
@@ -480,7 +516,7 @@ export default function Landing() {
       {/* STATS */}
       <section className="bg-white border-y border-slate-100">
         <div className="container-x py-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {(cmsStats || stats.map(s => ({ value: s.v, label: s.l }))).map((s, i) => {
+          {effStats.map((s, i) => {
             const fallback = stats[i] || stats[0];
             return (
             <div key={i} className="text-center">
@@ -502,7 +538,7 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {ageGroups.map(g => (
+            {effAgeGroups.map(g => (
               <div key={g.title} className="card-fun overflow-hidden group">
                 <div className="relative h-52 overflow-hidden">
                   <img onError={onImgErr} src={g.img} alt={g.title} loading="lazy"
@@ -541,7 +577,7 @@ export default function Landing() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {subjects.map(s => (
+          {effSubjects.map(s => (
             <Link to={`/find-tutors?subject=${encodeURIComponent(s.name)}`} key={s.name}
               className="card-fun p-5 group">
               <div className={`w-12 h-12 rounded-2xl ${s.color} flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
@@ -652,13 +688,13 @@ export default function Landing() {
       <section className="section-pad container-x">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative">
-            <img onError={onImgErr} src={IMG.india} alt="Indian classroom" loading="lazy"
+            <img onError={onImgErr} src={I.india} alt="Indian classroom" loading="lazy"
               className="rounded-3xl shadow-playful w-full h-[480px] object-cover" />
             <div className="absolute -bottom-6 -right-6 card p-5 hidden md:block w-64">
               <div className="flex items-center gap-2 text-mint-600 font-bold mb-1">
-                <Trophy className="w-5 h-5" /> Olympiad ready
+                <BookOpenCheck className="w-5 h-5" /> Boards ready
               </div>
-              <p className="text-sm text-slate-600">NSO, IMO, NSTSE, KVPY, NTSE — coached by past winners.</p>
+              <p className="text-sm text-slate-600">CBSE, ICSE, IB, IGCSE & every State Board — coached by exam-experts.</p>
             </div>
           </div>
           <div>
@@ -671,7 +707,7 @@ export default function Landing() {
                 { ic: BookOpenCheck, t: 'CBSE • ICSE • IB • All State Boards', d: 'Tutors tagged by board they teach' },
                 { ic: IndianRupee,   t: 'UPI, Paytm, EMI all accepted',          d: 'No-cost EMI on plans above ₹3,000' },
                 { ic: Languages,     t: '12 Indian languages',                  d: 'Switch fluidly between English & home-tongue' },
-                { ic: Trophy,        t: 'JEE • NEET • CUET • Olympiads',         d: 'Mentors are IIT, NIT and AIIMS alumni' },
+                { ic: BookOpen,      t: 'Boards-focused, Class 1–12',            d: 'Tutors aligned to your child\'s exact syllabus' },
                 { ic: Clock,         t: 'Indian timings (5–10 PM rush)',         d: 'Highest tutor availability in evening slots' },
                 { ic: Phone,         t: 'WhatsApp-first communication',          d: 'Class reminders, reports, doubts — all on WA' }
               ].map((x,i) => (
@@ -757,7 +793,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="relative">
-            <img onError={onImgErr} src={IMG.parent} alt="Parent and child" loading="lazy"
+            <img onError={onImgErr} src={I.parent} alt="Parent and child" loading="lazy"
               className="rounded-3xl shadow-mint w-full h-[480px] object-cover" />
             <div className="absolute top-6 -left-4 card p-4 w-56 animate-bounce-soft">
               <div className="text-xs text-slate-500">Class started</div>
@@ -775,6 +811,7 @@ export default function Landing() {
       </section>
 
       {/* TESTIMONIALS */}
+      {effTestimonials.length > 0 && (
       <section className="section-pad bg-gradient-to-b from-candy-50/30 to-white">
         <div className="container-x">
           <div className="text-center max-w-3xl mx-auto mb-14">
@@ -783,8 +820,8 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {testimonials.map(t => (
-              <div key={t.name} className="card-fun p-6 flex gap-4">
+            {effTestimonials.map((t, i) => (
+              <div key={`${t.name || ''}-${i}`} className="card-fun p-6 flex gap-4">
                 <img onError={onImgErr} src={t.img} className="w-20 h-20 rounded-2xl object-cover flex-shrink-0" alt={t.name} loading="lazy" />
                 <div>
                   <div className="flex gap-0.5 text-sunny-500 mb-2">
@@ -801,6 +838,7 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      )}
 
       {/* BECOME A TUTOR */}
       <section className="section-pad container-x">
@@ -823,7 +861,7 @@ export default function Landing() {
             <button onClick={() => openTutorForm('become_tutor_section')} className="btn-primary mt-7">Become a tutor — apply free <ArrowRight className="w-4 h-4" /></button>
           </div>
           <div className="relative min-h-[320px]">
-            <img onError={onImgErr} src={IMG.classroom} className="absolute inset-0 w-full h-full object-cover" alt="Tutor" loading="lazy" />
+            <img onError={onImgErr} src={I.classroom} className="absolute inset-0 w-full h-full object-cover" alt="Tutor" loading="lazy" />
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-900/70 via-grape-700/40 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 text-white">
               <div className="text-3xl font-bold h-display">3,400+ tutors</div>

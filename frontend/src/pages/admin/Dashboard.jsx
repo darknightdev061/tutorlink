@@ -1000,7 +1000,7 @@ const DEFAULT_CONTENT = {
     title_part1: 'Learning that feels',
     title_highlight: 'play time',
     title_part2: 'not homework',
-    subtitle: "India's friendliest 1-on-1 tutoring platform — connect with a verified, hand-picked tutor for your child, from Class 1 to Class 12. Boards, JEE, NEET, Olympiads, coding, music & more — all from ₹199 / hour.",
+    subtitle: "India's friendliest 1-on-1 tutoring platform — connect with a verified, hand-picked tutor for your child, from Class 1 to Class 12. Boards, coding, music, art & more — all from ₹199 / hour.",
     cta_primary: 'Start free — book a demo',
     cta_secondary: 'Browse 3,400+ tutors'
   },
@@ -1017,16 +1017,78 @@ const DEFAULT_CONTENT = {
       features: ['8 sessions / month (45 mins each)','1 subject of your choice','Free demo session','WhatsApp doubt support','Cancel anytime'] },
     { name: 'Smart',    price: 3499, per: 'month', badge: 'Most Popular', desc: 'Most-loved plan — covers two subjects with weekly tests.',
       features: ['16 sessions / month','Up to 2 subjects','Weekly mock tests + analysis','Monthly parent report card','Priority tutor matching','Class recordings (30-day access)'] },
-    { name: 'Champion', price: 5999, per: 'month', badge: 'Best Value',   desc: 'For boards & competitive prep — unlimited subjects + mentor.',
-      features: ['Unlimited sessions (Mon–Sat)','All subjects + Olympiad prep','Daily DPPs + AI doubt-bot','Dedicated academic mentor','JEE / NEET / CUET test series','1-on-1 career counselling'] }
+    { name: 'Champion', price: 5999, per: 'month', badge: 'Best Value',   desc: 'For boards & all-round prep — unlimited subjects + mentor.',
+      features: ['Unlimited sessions (Mon–Sat)','All subjects covered (Class 1–12)','Daily DPPs + AI doubt-bot','Dedicated academic mentor','Weekly chapter tests + analysis','1-on-1 career counselling'] }
   ],
   hourly_starts_at: 199,
   contact: {
     email: 'hello@tutorlink.in',
     phone: '+91 90000 12345',
     whatsapp: '+919000012345'
-  }
+  },
+  // Admin-managed testimonials shown on the landing page.
+  testimonials: [
+    { name: 'Anjali R.',     role: 'Parent of Class 7 student • Pune',  stars: 5,
+      text: 'My son went from struggling in maths to topping his class. The tutor we got was patient, kind, and explained things in Hindi when he got stuck.',
+      img: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1000&q=80' },
+    { name: 'Kabir S.',      role: 'Class 10 student • Hyderabad',     stars: 5,
+      text: 'I found a physics tutor 2 km from my home in 10 minutes. We had a free demo the next evening — booked him immediately. Boards went amazing!',
+      img: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1000&q=80' },
+    { name: 'Mrs. Banerjee', role: 'Parent of Class 4 twins • Kolkata', stars: 5,
+      text: 'I love the parent dashboard. I can see exactly what my daughters learnt every week, and the tutor sends me a tiny WhatsApp note after each class.',
+      img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=80' },
+    { name: 'Rajesh K.',     role: 'Parent • Kota',                     stars: 5,
+      text: 'TutorLink gave us a 1-on-1 mentor at a fraction of the cost of expensive coachings. My child\'s confidence and grades have both gone up.',
+      img: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1000&q=80' }
+  ],
+  // Hero / collage / section images. Empty string falls back to defaults.
+  images: {
+    heroKid:   'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80',
+    classroom: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=1200&q=80',
+    online:    'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?auto=format&fit=crop&w=1000&q=80',
+    primary:   'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1000&q=80',
+    middle:    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80',
+    high:      'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1000&q=80',
+    parent:    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1000&q=80',
+    india:     'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80'
+  },
+  // Subjects list — admin can add / remove / rename. Icon is a free-text label
+  // that maps to a lucide-react icon on the landing page (falls back to BookOpen).
+  subjects: [
+    { name: 'Mathematics',      icon: 'Calculator',   color: 'bg-brand-100 text-brand-700',  count: 540, blurb: 'From times-tables to calculus' },
+    { name: 'Physics',          icon: 'Atom',         color: 'bg-grape-100 text-grape-700',  count: 312, blurb: 'Concepts + numericals for boards' },
+    { name: 'Chemistry',        icon: 'FlaskConical', color: 'bg-mint-100 text-mint-700',    count: 287, blurb: 'Concepts + numericals' },
+    { name: 'Biology',          icon: 'Microscope',   color: 'bg-coral-100 text-coral-700',  count: 256, blurb: 'Boards-aligned, concept-first' },
+    { name: 'English',          icon: 'BookOpen',     color: 'bg-candy-100 text-candy-700',  count: 421, blurb: 'Grammar, writing, spoken' },
+    { name: 'Computer Science', icon: 'Code2',        color: 'bg-brand-100 text-brand-700',  count: 298, blurb: 'Python, Java, Scratch & more' },
+    { name: 'Hindi & Regional', icon: 'Languages',    color: 'bg-sunny-100 text-sunny-800',  count: 188, blurb: 'Hindi, Tamil, Bengali, Marathi…' },
+    { name: 'Social Studies',   icon: 'Globe2',       color: 'bg-grape-100 text-grape-700',  count: 174, blurb: 'History, Civics, Geography' },
+    { name: 'Drawing & Art',    icon: 'Palette',      color: 'bg-coral-100 text-coral-700',  count: 132, blurb: 'Sketching, painting, crafts' },
+    { name: 'Music',            icon: 'Music',        color: 'bg-candy-100 text-candy-700',  count:  94, blurb: 'Vocals, keyboard, guitar' },
+    { name: 'Coding for Kids',  icon: 'Gamepad2',     color: 'bg-mint-100 text-mint-700',    count: 156, blurb: 'Scratch, robotics, games' }
+  ],
+  // Cities for marquee + cities-covered count.
+  cities: [
+    'Bengaluru','Delhi NCR','Mumbai','Chennai','Hyderabad','Kolkata','Pune','Ahmedabad',
+    'Jaipur','Lucknow','Kochi','Chandigarh','Bhopal','Indore','Patna','Coimbatore'
+  ]
 };
+
+// Allowed Tailwind color presets for the subject cards (kept short so admin
+// picks from a known list — Tailwind purges unknown class strings).
+const SUBJECT_COLORS = [
+  'bg-brand-100 text-brand-700',
+  'bg-grape-100 text-grape-700',
+  'bg-mint-100 text-mint-700',
+  'bg-coral-100 text-coral-700',
+  'bg-candy-100 text-candy-700',
+  'bg-sunny-100 text-sunny-800'
+];
+const SUBJECT_ICONS = [
+  'Calculator','Atom','FlaskConical','Microscope','BookOpen','Code2','Languages',
+  'Globe2','Palette','Music','Gamepad2','Trophy','PenTool','Brain','Lightbulb',
+  'Rocket','GraduationCap','Heart'
+];
 
 function SiteContent() {
   const [content, setContent] = useState(DEFAULT_CONTENT);
@@ -1066,6 +1128,28 @@ function SiteContent() {
   const delPlanFeat = (pi, fi) => setContent({ ...content, plans: content.plans.map((p, idx) =>
     idx === pi ? { ...p, features: p.features.filter((_, j) => j !== fi) } : p) });
   const setContact = (k, v) => setContent({ ...content, contact: { ...content.contact, [k]: v } });
+
+  // Testimonials helpers
+  const tList = content.testimonials || [];
+  const setT = (i, k, v) => setContent({ ...content, testimonials: tList.map((t, idx) => idx === i ? { ...t, [k]: v } : t) });
+  const addT = () => setContent({ ...content, testimonials: [...tList, { name: 'New parent', role: 'Parent • City', text: 'Loved the experience.', img: '', stars: 5 }] });
+  const delT = (i) => setContent({ ...content, testimonials: tList.filter((_, idx) => idx !== i) });
+
+  // Images helpers
+  const imgs = content.images || {};
+  const setImg = (k, v) => setContent({ ...content, images: { ...imgs, [k]: v } });
+
+  // Subjects helpers
+  const sList = content.subjects || [];
+  const setSubj = (i, k, v) => setContent({ ...content, subjects: sList.map((s, idx) => idx === i ? { ...s, [k]: v } : s) });
+  const addSubj = () => setContent({ ...content, subjects: [...sList, { name: 'New subject', blurb: 'Short tagline', count: 0, icon: 'BookOpen', color: SUBJECT_COLORS[0] }] });
+  const delSubj = (i) => setContent({ ...content, subjects: sList.filter((_, idx) => idx !== i) });
+
+  // Cities helpers
+  const cList = content.cities || [];
+  const setCity = (i, v) => setContent({ ...content, cities: cList.map((c, idx) => idx === i ? v : c) });
+  const addCity = () => setContent({ ...content, cities: [...cList, 'New city'] });
+  const delCity = (i) => setContent({ ...content, cities: cList.filter((_, idx) => idx !== i) });
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -1173,6 +1257,132 @@ function SiteContent() {
             <input className="input" value={content.contact.phone} onChange={e => setContact('phone', e.target.value)} /></div>
           <div><label className="label">WhatsApp number (no spaces)</label>
             <input className="input" value={content.contact.whatsapp} onChange={e => setContact('whatsapp', e.target.value)} placeholder="+919000012345" /></div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="card-fun p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="h-display text-xl font-bold">Testimonials</h3>
+            <p className="text-sm text-slate-500">Add, edit or remove the parent / student stories on the landing page.</p>
+          </div>
+          <button type="button" onClick={addT} className="btn-outline py-2 px-3 text-sm"><Plus className="w-4 h-4" /> Add testimonial</button>
+        </div>
+        <div className="space-y-4">
+          {tList.length === 0 && (
+            <div className="text-sm text-slate-500 italic">No testimonials yet — landing page will hide this section.</div>
+          )}
+          {tList.map((t, i) => (
+            <div key={i} className="border-2 border-slate-100 rounded-2xl p-4 bg-slate-50/40">
+              <div className="flex items-start gap-4">
+                {t.img ? (
+                  <img src={t.img} alt="" className="w-16 h-16 rounded-2xl object-cover flex-shrink-0 ring-2 ring-white shadow"
+                    onError={(e) => { e.currentTarget.style.opacity = 0.3; }} />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400 text-xs">No image</div>
+                )}
+                <div className="flex-1 grid sm:grid-cols-2 gap-3">
+                  <div><label className="label">Name</label>
+                    <input className="input" value={t.name || ''} onChange={e => setT(i, 'name', e.target.value)} /></div>
+                  <div><label className="label">Role / city</label>
+                    <input className="input" value={t.role || ''} onChange={e => setT(i, 'role', e.target.value)} placeholder="Parent of Class 7 • Pune" /></div>
+                  <div className="sm:col-span-2"><label className="label">Image URL</label>
+                    <input className="input" value={t.img || ''} onChange={e => setT(i, 'img', e.target.value)} placeholder="https://..." /></div>
+                  <div className="sm:col-span-2"><label className="label">Quote</label>
+                    <textarea className="input min-h-[80px]" value={t.text || ''} onChange={e => setT(i, 'text', e.target.value)} /></div>
+                  <div><label className="label">Stars (1–5)</label>
+                    <input className="input" type="number" min={1} max={5} value={t.stars || 5}
+                      onChange={e => setT(i, 'stars', Math.max(1, Math.min(5, Number(e.target.value) || 5)))} /></div>
+                </div>
+                <button type="button" onClick={() => delT(i)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* WEBSITE IMAGES */}
+      <section className="card-fun p-6">
+        <h3 className="h-display text-xl font-bold mb-2">Website images</h3>
+        <p className="text-sm text-slate-500 mb-4">Paste any public image URL (Unsplash, your CDN, etc). Leave blank to use the default.</p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            { k: 'heroKid',   label: 'Hero — student photo (top right)' },
+            { k: 'online',    label: 'Hero — online tutor photo (bottom left)' },
+            { k: 'classroom', label: '"Become a tutor" banner background' },
+            { k: 'india',     label: '"Made in India" section image' },
+            { k: 'parent',    label: '"Safety first" section image' },
+            { k: 'primary',   label: 'Age group: Classes 1–5' },
+            { k: 'middle',    label: 'Age group: Classes 6–8' },
+            { k: 'high',      label: 'Age group: Classes 9–10' }
+          ].map(({ k, label }) => (
+            <div key={k}>
+              <label className="label">{label}</label>
+              <div className="flex gap-3 items-start">
+                {imgs[k] ? (
+                  <img src={imgs[k]} alt="" className="w-16 h-16 object-cover rounded-xl ring-1 ring-slate-200"
+                    onError={(e) => { e.currentTarget.style.opacity = 0.3; }} />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center text-xs text-slate-400">empty</div>
+                )}
+                <input className="input flex-1" value={imgs[k] || ''} onChange={e => setImg(k, e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* SUBJECTS */}
+      <section className="card-fun p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="h-display text-xl font-bold">Subjects ({sList.length})</h3>
+            <p className="text-sm text-slate-500">Add or remove subjects shown in the "what they want to learn" grid. Olympiad / NEET / JEE can be added here when you're ready.</p>
+          </div>
+          <button type="button" onClick={addSubj} className="btn-outline py-2 px-3 text-sm"><Plus className="w-4 h-4" /> Add subject</button>
+        </div>
+        <div className="space-y-3">
+          {sList.map((s, i) => (
+            <div key={i} className="border-2 border-slate-100 rounded-2xl p-4 bg-slate-50/40 grid sm:grid-cols-12 gap-3 items-end">
+              <div className="sm:col-span-3"><label className="label">Name</label>
+                <input className="input" value={s.name || ''} onChange={e => setSubj(i, 'name', e.target.value)} /></div>
+              <div className="sm:col-span-4"><label className="label">Tagline</label>
+                <input className="input" value={s.blurb || ''} onChange={e => setSubj(i, 'blurb', e.target.value)} /></div>
+              <div className="sm:col-span-2"><label className="label">Tutor count</label>
+                <input className="input" type="number" value={s.count || 0} onChange={e => setSubj(i, 'count', Number(e.target.value) || 0)} /></div>
+              <div className="sm:col-span-1"><label className="label">Icon</label>
+                <select className="input" value={s.icon || 'BookOpen'} onChange={e => setSubj(i, 'icon', e.target.value)}>
+                  {SUBJECT_ICONS.map(n => <option key={n} value={n}>{n}</option>)}
+                </select></div>
+              <div className="sm:col-span-1"><label className="label">Color</label>
+                <select className="input" value={s.color || SUBJECT_COLORS[0]} onChange={e => setSubj(i, 'color', e.target.value)}>
+                  {SUBJECT_COLORS.map(c => <option key={c} value={c}>{c.split(' ')[0].replace('bg-', '').replace('-100', '')}</option>)}
+                </select></div>
+              <div className="sm:col-span-1 flex justify-end">
+                <button type="button" onClick={() => delSubj(i)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CITIES */}
+      <section className="card-fun p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="h-display text-xl font-bold">Cities covered ({cList.length})</h3>
+            <p className="text-sm text-slate-500">Used for the trust marquee. The "{cList.length}+ Cities covered" stat updates automatically when you change this list.</p>
+          </div>
+          <button type="button" onClick={addCity} className="btn-outline py-2 px-3 text-sm"><Plus className="w-4 h-4" /> Add city</button>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {cList.map((c, i) => (
+            <div key={i} className="flex gap-2">
+              <input className="input flex-1" value={c} onChange={e => setCity(i, e.target.value)} />
+              <button type="button" onClick={() => delCity(i)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
+            </div>
+          ))}
         </div>
       </section>
 

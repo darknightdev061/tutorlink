@@ -75,6 +75,15 @@ html, body { font-family: 'Nunito', system-ui, sans-serif; }
   background-image: linear-gradient(120deg, #ffe082 0%, #ffe082 100%);
   background-repeat: no-repeat; background-size: 100% 36%;
   background-position: 0 88%; padding: 0 4px;
+  display: inline-block;
+  line-height: 1.15;
+  padding-bottom: 0.18em;
+}
+/* When kid-underline wraps a gradient-text span, give the inner span room
+   for descenders so the whole word is visible. */
+.kid-underline > .text-gradient {
+  display: inline-block;
+  padding-bottom: 0.05em;
 }
 .scroll-fade-x {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);

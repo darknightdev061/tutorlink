@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 // Public, no-login enquiry form. Pass `type='student' | 'tutor'` and an
 // optional `source` label so the admin can see where the lead came from.
-export default function EnquiryModal({ open, onClose, type = 'student', source, title }) {
+export default function EnquiryModal({ open, onClose, type = 'student', source, title, initialSubjects = '' }) {
   const empty = {
     full_name: '', phone: '', email: '',
     grade_level: '', subjects: '', city: '', message: ''
@@ -13,7 +13,7 @@ export default function EnquiryModal({ open, onClose, type = 'student', source, 
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
-  useEffect(() => { if (open) { setForm(empty); setDone(false); } }, [open]);
+  useEffect(() => { if (open) { setForm({ ...empty, subjects: initialSubjects || '' }); setDone(false); } }, [open, initialSubjects]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };

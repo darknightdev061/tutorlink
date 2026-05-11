@@ -66,11 +66,11 @@ export default function Footer() {
         <div>
           <h4 className="text-white font-bold mb-4">For Tutors</h4>
           <ul className="space-y-2.5 text-sm">
-            <li><Link to="/become-tutor" className="hover:text-white">Apply to Teach</Link></li>
-            <li><Link to="/login"        className="hover:text-white">Tutor Login</Link></li>
-            <li><Link to="/how-it-works" className="hover:text-white">Earnings &amp; Payouts</Link></li>
-            <li><Link to="/become-tutor" className="hover:text-white">Tutor Code of Conduct</Link></li>
-            <li><Link to="/become-tutor" className="hover:text-white">Resources &amp; Training</Link></li>
+            <li><Link to="/become-tutor"    className="hover:text-white">Apply to Teach</Link></li>
+            <li><Link to="/login"           className="hover:text-white">Tutor Login</Link></li>
+            <li><Link to="/earnings"        className="hover:text-white">Earnings &amp; Payouts</Link></li>
+            <li><Link to="/code-of-conduct" className="hover:text-white">Tutor Code of Conduct</Link></li>
+            <li><Link to="/resources"       className="hover:text-white">Resources &amp; Training</Link></li>
           </ul>
         </div>
 
@@ -92,10 +92,10 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div>© {new Date().getFullYear()} TutorLink Edutech Pvt. Ltd. — Made with <Heart className="w-3 h-3 inline text-candy-500 fill-candy-500" /> in India 🇮🇳</div>
           <div className="flex flex-wrap gap-4">
-            <Link to="/how-it-works" className="hover:text-white">Privacy</Link>
-            <Link to="/how-it-works" className="hover:text-white">Terms</Link>
-            <Link to="/how-it-works" className="hover:text-white">Refund Policy</Link>
-            <Link to="/how-it-works" className="hover:text-white">Child Safety</Link>
+            <Link to="/privacy"       className="hover:text-white">Privacy</Link>
+            <Link to="/terms"         className="hover:text-white">Terms</Link>
+            <Link to="/refund-policy" className="hover:text-white">Refund Policy</Link>
+            <Link to="/child-safety"  className="hover:text-white">Child Safety</Link>
           </div>
         </div>
       </div>

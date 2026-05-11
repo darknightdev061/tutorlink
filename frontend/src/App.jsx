@@ -9,6 +9,7 @@ import Signup from './pages/Signup';
 import Subjects from './pages/Subjects';
 import HowItWorks from './pages/HowItWorks';
 import BecomeTutor from './pages/BecomeTutor';
+import Legal from './pages/Legal';
 import NotFound from './pages/NotFound';
 
 import StudentDashboard from './pages/student/Dashboard';
@@ -35,6 +36,16 @@ export default function App() {
             <Route path="/subjects"     element={<Subjects />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/become-tutor" element={<BecomeTutor />} />
+
+            {/* Legal / info pages (linked from footer) */}
+            <Route path="/privacy"          element={<Legal />} />
+            <Route path="/terms"            element={<Legal />} />
+            <Route path="/refund-policy"    element={<Legal />} />
+            <Route path="/child-safety"     element={<Legal />} />
+            <Route path="/earnings"         element={<Legal />} />
+            <Route path="/code-of-conduct"  element={<Legal />} />
+            <Route path="/resources"        element={<Legal />} />
+
             <Route path="/find-tutors"  element={
               <ProtectedRoute roles={['student','admin']}><StudentSearch /></ProtectedRoute>} />
 

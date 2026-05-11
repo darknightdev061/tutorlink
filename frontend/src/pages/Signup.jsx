@@ -16,12 +16,22 @@ export default function Signup() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!form.full_name.trim()) return toast.error('Please enter your full name');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) return toast.error('Please enter a valid email');
+    if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
     setBusy(true);
     try {
-      await signUp(form);
-      toast.success('Account created — check email to verify (if enabled).');
-      nav('/login');
-    } catch (err) { toast.error(err.message); }
+      const data = await signUp(form);
+      // If Supabase email-confirmation is disabled, signUp already returns a session
+      // and the user is logged in. Send them straight to their dashboard.
+      if (data?.session) {
+        toast.success(`Welcome to TutorLink, ${form.full_name.split(' ')[0]}!`);
+        nav(form.role === 'tutor' ? '/tutor/apply' : '/student', { replace: true });
+      } else {
+        toast.success('Account created — check your email to verify, then sign in.');
+        nav('/login');
+      }
+    } catch (err) { toast.error(err.message || 'Sign-up failed'); }
     finally { setBusy(false); }
   };
 

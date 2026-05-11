@@ -161,6 +161,22 @@ router.post('/users/register', async (req, res) => {
     id: created.user.id, email, full_name: full_name || null, role, is_active: true
   }, { onConflict: 'id' });
 
+  if (role === 'tutor') {
+    // Seed an empty tutor_profiles row so the new tutor shows up in the admin
+    // "tutors" tab as pending and can immediately fill the apply form.
+    await supabaseAdmin.from('tutor_profiles').upsert({
+      user_id: created.user.id,
+      subjects: [],
+      languages: [],
+      hourly_rate: 0,
+      experience_years: 0,
+      service_radius_km: 10,
+      city: req.body.city || null,
+      zip_code: req.body.zip_code || null,
+      approval_status: 'pending'
+    }, { onConflict: 'user_id' });
+  }
+
   if (role === 'student') {
     // Auto-generate a TL-XXXX roll number if admin didn't specify one
     let roll = roll_number;

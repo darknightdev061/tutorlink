@@ -71,22 +71,22 @@ export default function AdminDashboard() {
   const email = me?.email || profile?.email;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
-        <div>
-          <h1 className="h-display text-3xl md:text-4xl font-bold">Admin panel</h1>
-          <p className="text-slate-600">Manage tutors, students, enquiries and leads — all in one place.</p>
-          <p className="text-xs text-slate-400 mt-1">
+        <div className="min-w-0">
+          <h1 className="h-display text-2xl sm:text-3xl md:text-4xl font-bold">Admin panel</h1>
+          <p className="text-slate-600 text-sm sm:text-base">Manage tutors, students, enquiries and leads — all in one place.</p>
+          <p className="text-xs text-slate-400 mt-1 break-all">
             Signed in as <b className="text-slate-700">{email || '—'}</b>
             {' '}· role: <span className={`pill ${role === 'admin' ? 'bg-mint-100 text-mint-700' : 'bg-red-100 text-red-700'}`}>{role || 'unknown'}</span>
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={refreshStats} className="btn-outline">
-            <RefreshCw className="w-4 h-4" /> Refresh
+        <div className="flex gap-2 flex-shrink-0">
+          <button onClick={refreshStats} className="btn-outline text-sm">
+            <RefreshCw className="w-4 h-4" /> <span className="hidden sm:inline">Refresh</span>
           </button>
-          <button onClick={async () => { await signOut(); window.location.href = '/'; }} className="btn-ghost">
-            <LogOut className="w-4 h-4" /> Logout
+          <button onClick={async () => { await signOut(); window.location.href = '/'; }} className="btn-ghost text-sm">
+            <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
@@ -103,18 +103,20 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Tab bar */}
-      <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-2">
-        {TABS.map(t => {
-          const active = tab === t.id;
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition
-                ${active ? 'bg-brand-600 text-white shadow-playful' : 'text-slate-600 hover:bg-slate-100'}`}>
-              <t.icon className="w-4 h-4" /> {t.label}
-            </button>
-          );
-        })}
+      {/* Tab bar — scrolls horizontally on mobile, wraps on tablet/desktop */}
+      <div className="mb-6 border-b border-slate-200 pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 overflow-x-auto sm:overflow-visible">
+        <div className="flex sm:flex-wrap gap-2 min-w-max sm:min-w-0">
+          {TABS.map(t => {
+            const active = tab === t.id;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl font-semibold text-sm transition whitespace-nowrap flex-shrink-0
+                  ${active ? 'bg-brand-600 text-white shadow-playful' : 'text-slate-600 hover:bg-slate-100'}`}>
+                <t.icon className="w-4 h-4" /> {t.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tab === 'overview'         && <Overview stats={stats} setTab={setTab} />}
@@ -142,22 +144,22 @@ function Overview({ stats, setTab }) {
 
   return (
     <div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-3 sm:gap-4">
         {cards.map(c => (
           <button key={c.label} onClick={() => setTab(c.goto)}
-            className="card-fun p-5 flex items-center gap-4 text-left">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${c.color}`}>
-              <c.icon className="w-6 h-6" />
+            className="card-fun p-4 sm:p-5 flex items-center gap-3 sm:gap-4 text-left">
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${c.color}`}>
+              <c.icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="text-3xl font-extrabold text-slate-900">{c.value}</div>
-              <div className="text-sm text-slate-500 font-semibold">{c.label}</div>
+            <div className="min-w-0">
+              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">{c.value}</div>
+              <div className="text-xs sm:text-sm text-slate-500 font-semibold">{c.label}</div>
             </div>
           </button>
         ))}
       </div>
 
-      <div className="mt-8 grid md:grid-cols-3 gap-4">
+      <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <button onClick={() => setTab('tutors')} className="card-fun p-5 text-left">
           <div className="font-bold">Approve tutors</div>
           <p className="text-sm text-slate-600 mt-1">{stats.pending_tutors || 0} applications waiting.</p>
@@ -212,9 +214,9 @@ function TutorApplications({ onChange }) {
       <div className="space-y-3">
         {!busy && list.length === 0 && <div className="text-slate-500">No tutors in this category.</div>}
         {list.map(t => (
-          <div key={t.user_id} className="card-fun p-5">
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
+          <div key={t.user_id} className="card-fun p-4 sm:p-5">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+              <div className="flex-1 min-w-0 sm:min-w-[200px]">
                 <div className="font-bold">{t.user?.full_name || 'Unnamed'}
                   <span className="text-slate-400 text-sm font-normal ml-2">{t.user?.email}</span>
                 </div>
@@ -320,10 +322,10 @@ function UsersTab({ role: initialRole, onChange }) {
             {r || 'all'}
           </button>
         ))}
-        <div className="ml-auto relative">
+        <div className="relative w-full sm:w-auto sm:ml-auto">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, email, roll, subject…"
-            className="input pl-9 py-2 w-72" />
+            className="input pl-9 py-2 w-full sm:w-72" />
         </div>
       </div>
 
@@ -354,9 +356,9 @@ function UserRow({ u, onToggle, onDelete, onEdit }) {
   const hasGuardian = isStudent && u.student && (u.student.guardian_name || u.student.guardian_phone || u.student.alternate_phone || u.student.guardian_email);
 
   return (
-    <div className="card-fun p-5">
+    <div className="card-fun p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex-1 min-w-[280px]">
+        <div className="flex-1 min-w-0 sm:min-w-[240px]">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-lg">{u.full_name || '— unnamed —'}</span>
             <span className={`pill capitalize ${isStudent ? 'bg-brand-100 text-brand-700' : isTutor ? 'bg-candy-100 text-candy-700' : 'bg-slate-200 text-slate-700'}`}>{u.role}</span>
@@ -448,7 +450,7 @@ function UserRow({ u, onToggle, onDelete, onEdit }) {
           )}
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-row sm:flex-col gap-1.5 w-full sm:w-auto flex-wrap">
           <button onClick={() => onEdit?.(u)} className="btn-primary py-1.5 px-3 text-xs">
             <Pencil className="w-3.5 h-3.5" /> Edit
           </button>
@@ -517,9 +519,9 @@ function Enquiries() {
           const tut = r.tutor || {};
           const phone = stu.phone || stu.guardian_phone;
           return (
-            <div key={r.id} className="card-fun p-5">
+            <div key={r.id} className="card-fun p-4 sm:p-5">
               <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex-1 min-w-[260px]">
+                <div className="flex-1 min-w-0 sm:min-w-[240px]">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold">{stu.full_name || stu.email || 'Student'}</span>
                     <span className="text-slate-400">→</span>
@@ -546,7 +548,7 @@ function Enquiries() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-row sm:flex-col gap-1.5 w-full sm:w-auto flex-wrap">
                   {phone && <a href={`https://wa.me/${phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn-mint py-1.5 px-3 text-xs"><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</a>}
                   {phone && <a href={`tel:${phone}`} className="btn-outline py-1.5 px-3 text-xs"><Phone className="w-3.5 h-3.5" /> Call</a>}
                   {r.status !== 'accepted'  && <button onClick={() => setStatus(r.id, 'accepted')}  className="btn-primary py-1.5 px-3 text-xs"><Check className="w-3.5 h-3.5" /> Accept</button>}
@@ -643,20 +645,20 @@ function EditUserModal({ user, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-playful overflow-hidden animate-pop max-h-[92vh] flex flex-col">
-        <div className="relative gradient-rainbow text-white px-6 py-5">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-2xl lg:max-w-3xl xl:max-w-4xl shadow-playful overflow-hidden animate-pop max-h-[95vh] sm:max-h-[92vh] flex flex-col">
+        <div className="relative gradient-rainbow text-white px-4 sm:px-6 py-4 sm:py-5">
           <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center">
             <X className="w-5 h-5" />
           </button>
-          <h2 className="h-display text-2xl font-bold">Edit {isStudent ? 'student' : isTutor ? 'tutor' : 'user'}</h2>
-          <p className="text-white/85 text-sm mt-1">
+          <h2 className="h-display text-xl sm:text-2xl font-bold pr-10">Edit {isStudent ? 'student' : isTutor ? 'tutor' : 'user'}</h2>
+          <p className="text-white/85 text-xs sm:text-sm mt-1 break-words">
             {user.full_name || user.email}
             {isStudent && sp.roll_number && <> · roll <b>{sp.roll_number}</b> <span className="text-white/70">(read-only)</span></>}
           </p>
         </div>
 
-        <form onSubmit={submit} className="overflow-y-auto p-6 space-y-6">
+        <form onSubmit={submit} className="overflow-y-auto p-4 sm:p-6 space-y-6">
           {/* Basic */}
           <section>
             <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Basic</h3>
@@ -792,9 +794,9 @@ function PublicEnquiries() {
 
       <div className="space-y-3">
         {list.map(e => (
-          <div key={e.id} className="card-fun p-5">
+          <div key={e.id} className="card-fun p-4 sm:p-5">
             <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-1 min-w-[260px]">
+              <div className="flex-1 min-w-0 sm:min-w-[240px]">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-lg">{e.full_name}</span>
                   <span className={`pill capitalize ${e.type === 'tutor' ? 'bg-candy-100 text-candy-700' : 'bg-brand-100 text-brand-700'}`}>{e.type === 'tutor' ? 'Wants to teach' : 'Wants a tutor'}</span>
@@ -825,7 +827,7 @@ function PublicEnquiries() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-row sm:flex-col gap-1.5 w-full sm:w-auto flex-wrap">
                 {e.phone && <a href={`https://wa.me/${e.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn-mint py-1.5 px-3 text-xs"><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</a>}
                 {e.phone && <a href={`tel:${e.phone}`} className="btn-outline py-1.5 px-3 text-xs"><Phone className="w-3.5 h-3.5" /> Call</a>}
                 {e.status !== 'contacted' && <button onClick={() => setStatus(e.id, 'contacted')} className="btn-ghost py-1.5 px-3 text-xs">Mark contacted</button>}
@@ -865,12 +867,12 @@ function Leads() {
       </div>}
       {!busy && !err && list.length === 0 && <div className="text-slate-500">No outstanding leads — everyone has booked.</div>}
 
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
         {list.map(u => (
-          <div key={u.id} className="card-fun p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="font-bold">{u.full_name || 'Unnamed student'}</div>
+          <div key={u.id} className="card-fun p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <div className="font-bold truncate">{u.full_name || 'Unnamed student'}</div>
                 <div className="text-sm text-slate-600">{u.email}</div>
                 <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-3">
                   {u.phone && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" />{u.phone}</span>}
@@ -933,9 +935,9 @@ function RegisterStudent({ onCreated }) {
   const set = (k, v) => setForm({ ...form, [k]: v });
 
   return (
-    <div className="max-w-3xl">
-      <p className="text-slate-600 mb-5">Onboard a student directly. They'll receive login credentials by email and can log in immediately. Roll number is auto-generated (TL-XXXX) if you leave it blank.</p>
-      <form onSubmit={submit} className="card-fun p-6 space-y-6">
+    <div className="max-w-3xl xl:max-w-4xl">
+      <p className="text-slate-600 mb-5 text-sm sm:text-base">Onboard a student directly. They'll receive login credentials by email and can log in immediately. Roll number is auto-generated (TL-XXXX) if you leave it blank.</p>
+      <form onSubmit={submit} className="card-fun p-4 sm:p-6 space-y-6">
 
         <div>
           <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-wide">Student details</h3>
@@ -1189,7 +1191,7 @@ function SiteContent() {
   const counter    = content.studentCounter || {};
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-6 sm:space-y-8 max-w-4xl xl:max-w-5xl">
       {missingTable && (
         <div className="card-fun p-5 bg-coral-50 border-coral-200">
           <div className="font-bold text-coral-700 mb-2 flex items-center gap-2"><Settings className="w-4 h-4" /> One-time setup needed</div>
@@ -1206,7 +1208,7 @@ function SiteContent() {
       </div>
 
       {/* HERO */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-4">Hero section</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
@@ -1229,7 +1231,7 @@ function SiteContent() {
       </section>
 
       {/* STATS */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-4">Stats strip (6 numbers)</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           {content.stats.map((s, i) => (
@@ -1242,7 +1244,7 @@ function SiteContent() {
       </section>
 
       {/* PRICING PLANS */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-2">Pricing plans (INR)</h3>
         <p className="text-sm text-slate-500 mb-5">All prices in ₹ (INR). Leave badge blank if you don't want a sticker on the card.</p>
         <div className="space-y-5">
@@ -1285,7 +1287,7 @@ function SiteContent() {
       </section>
 
       {/* CONTACT */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-4">Contact details</h3>
         <div className="grid sm:grid-cols-3 gap-4">
           <div><label className="label">Email</label>
@@ -1298,7 +1300,7 @@ function SiteContent() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="h-display text-xl font-bold">Testimonials</h3>
@@ -1340,7 +1342,7 @@ function SiteContent() {
       </section>
 
       {/* WEBSITE IMAGES */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-2">Website images</h3>
         <p className="text-sm text-slate-500 mb-4">Paste any public image URL (Unsplash, your CDN, etc). Leave blank to use the default.</p>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -1371,7 +1373,7 @@ function SiteContent() {
       </section>
 
       {/* SUBJECTS */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="h-display text-xl font-bold">Subjects ({sList.length})</h3>
@@ -1381,22 +1383,22 @@ function SiteContent() {
         </div>
         <div className="space-y-3">
           {sList.map((s, i) => (
-            <div key={i} className="border-2 border-slate-100 rounded-2xl p-4 bg-slate-50/40 grid sm:grid-cols-12 gap-3 items-end">
-              <div className="sm:col-span-3"><label className="label">Name</label>
+            <div key={i} className="border-2 border-slate-100 rounded-2xl p-4 bg-slate-50/40 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+              <div className="lg:col-span-3"><label className="label">Name</label>
                 <input className="input" value={s.name || ''} onChange={e => setSubj(i, 'name', e.target.value)} /></div>
-              <div className="sm:col-span-4"><label className="label">Tagline</label>
+              <div className="lg:col-span-4"><label className="label">Tagline</label>
                 <input className="input" value={s.blurb || ''} onChange={e => setSubj(i, 'blurb', e.target.value)} /></div>
-              <div className="sm:col-span-2"><label className="label">Tutor count</label>
+              <div className="lg:col-span-2"><label className="label">Tutor count</label>
                 <input className="input" type="number" value={s.count || 0} onChange={e => setSubj(i, 'count', Number(e.target.value) || 0)} /></div>
-              <div className="sm:col-span-1"><label className="label">Icon</label>
+              <div className="lg:col-span-1"><label className="label">Icon</label>
                 <select className="input" value={s.icon || 'BookOpen'} onChange={e => setSubj(i, 'icon', e.target.value)}>
                   {SUBJECT_ICONS.map(n => <option key={n} value={n}>{n}</option>)}
                 </select></div>
-              <div className="sm:col-span-1"><label className="label">Color</label>
+              <div className="lg:col-span-1"><label className="label">Color</label>
                 <select className="input" value={s.color || SUBJECT_COLORS[0]} onChange={e => setSubj(i, 'color', e.target.value)}>
                   {SUBJECT_COLORS.map(c => <option key={c} value={c}>{c.split(' ')[0].replace('bg-', '').replace('-100', '')}</option>)}
                 </select></div>
-              <div className="sm:col-span-1 flex justify-end">
+              <div className="sm:col-span-2 lg:col-span-1 flex justify-end">
                 <button type="button" onClick={() => delSubj(i)} className="btn-ghost text-red-600 px-2"><Trash className="w-4 h-4" /></button>
               </div>
             </div>
@@ -1405,7 +1407,7 @@ function SiteContent() {
       </section>
 
       {/* CITIES */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="h-display text-xl font-bold">Cities covered ({cList.length})</h3>
@@ -1424,7 +1426,7 @@ function SiteContent() {
       </section>
 
       {/* ANNOUNCEMENT BAR */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-2">Top announcement bar</h3>
         <p className="text-sm text-slate-500 mb-4">The thin colorful bar at the very top of the landing page.</p>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -1440,7 +1442,7 @@ function SiteContent() {
       </section>
 
       {/* HERO LIVE STUDENT COUNTER */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-2">Hero — live "students" counter</h3>
         <p className="text-sm text-slate-500 mb-4">The little ticker under the hero CTA buttons (e.g. "11,834+ students learning live…"). The number ticks up automatically every few seconds.</p>
         <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4">
@@ -1562,7 +1564,7 @@ function SiteContent() {
         )} />
 
       {/* BECOME A TUTOR */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-4">"Become a tutor" section</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><label className="label">Title (use plain text — gradient styling is automatic)</label>
@@ -1599,7 +1601,7 @@ function SiteContent() {
         )} />
 
       {/* FINAL CTA */}
-      <section className="card-fun p-6">
+      <section className="card-fun p-4 sm:p-6">
         <h3 className="h-display text-xl font-bold mb-4">Final call-to-action banner</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><label className="label">Title</label>
@@ -1623,14 +1625,14 @@ function SiteContent() {
 /* Reusable collapsible editor for an array of similar items. */
 function CardListEditor({ title, subtitle, list, onAdd, onDel, renderItem }) {
   return (
-    <section className="card-fun p-6">
+    <section className="card-fun p-4 sm:p-6">
       <details>
         <summary className="cursor-pointer flex items-center justify-between gap-3 select-none">
-          <div>
-            <h3 className="h-display text-xl font-bold">{title} ({list.length})</h3>
-            {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+          <div className="min-w-0">
+            <h3 className="h-display text-lg sm:text-xl font-bold">{title} ({list.length})</h3>
+            {subtitle && <p className="text-xs sm:text-sm text-slate-500">{subtitle}</p>}
           </div>
-          <span className="text-xs text-slate-400 font-semibold">click to expand</span>
+          <span className="text-xs text-slate-400 font-semibold whitespace-nowrap flex-shrink-0">click to expand</span>
         </summary>
         <div className="mt-4 space-y-3">
           {list.map((item, i) => (
